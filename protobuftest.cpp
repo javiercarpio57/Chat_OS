@@ -9,15 +9,15 @@ int main()
 {
     GOOGLE_PROTOBUF_VERIFY_VERSION;
 
-    // Se crea instacia tipo MiInfoRequest y se setean los valores deseables
-    MiInfoRequest* miInfo(new MiInfoRequest);
+    // Se crea instacia tipo MyInfoSynchronize y se setean los valores deseables
+    MyInfoSynchronize * miInfo(new MyInfoSynchronize);
     miInfo->set_username("username123");
-    miInfo->set_ip("12356789");
+    miInfo->set_ip("127.0.0.1");
 
     // Se crea instancia de Mensaje, se setea los valores deseados
-    Mensaje m;
-    m.set_option("0");
-    m.set_allocated_miinforeq(miInfo);
+    ServerMessage m;
+    m.set_option(0);
+    // m.set_allocated_miinforeq(miInfo);
 
     // Se serializa el message a string
     string binary;
@@ -46,13 +46,13 @@ int main()
     */
 
     // Se deserealiza el string a un objeto Mensaje
-    Mensaje m2;
+    ServerMessage m2;
     m2.ParseFromString(binary);
 
     // Se puede accesar a los valores de la siguiente manera:
     cout << "Option: " << m2.option() << endl;
-    cout << "Username: " << m2.miinforeq().username() << endl;
-    cout << "ip: " << m2.miinforeq().ip() << endl;
+    // cout << "Username: " << m2.username() << endl;
+    // cout << "ip: " << m2.ip() << endl;
 
     google::protobuf::ShutdownProtobufLibrary();
     return 1;
