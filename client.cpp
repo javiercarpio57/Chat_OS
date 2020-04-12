@@ -97,6 +97,7 @@ void *checkState(void *args) {
         } else {
             if (estadoActual != "INACTIVO")
                 cambiarEstado("INACTIVO");
+            
         }
     }
 }
@@ -106,15 +107,42 @@ void *checkState(void *args) {
 // 0: Error. Ya existe el usuario u otro error.
 int sendInfoToServer(string nombre, string username, string ip, string puerto) {
     // Aqui se pone el codigo para enviar al server.
+    // ConnectedUser miUsuario;
+    // miUsuario.set_username (username);
+    // miUsuario.set_status (estadoActual);
+    // miUsuario.set_ip (ip);
+
+    // Enviar al servidor miUsuario.
+    MyInfoSynchronize * myInfo(new MyInfoSynchronize);
+    myInfo->set_username(username);
+    myInfo->set_ip(ip);
+
+    ClientMessage clientMessage;
+    clientMessage.set_option (1);
+    clientMessage.set_allocated_synchronize(myInfo);
+    //  ......
     return 1;
 }
 
 void *broadcastMessage (string message) {
     // Aqui se envia un mensaje a todos los usuarios
+    BroadcastRequest broadcastMessage;
+    broadcastMessage.set_message (message);
+
+    ClientMessage clientMessage;
+    clientMessage.set_allocated_broadcast (&broadcastMessage);
+
 }
 
 void *cambiarEstado (string nuevoEstado) {
     // Aqui se cambia a otro estado
+    ChangeStatusRequest changeStatus;
+    changeStatus.set_status (nuevoEstado);
+
+    ClientMessage clientMessage;
+    clientMessage.set_option (3);
+    clientMessage.set_allocated_changestatus (&changeStatus);
+
     cout << "Estado nuevo: " << nuevoEstado << endl;
     estadoActual = nuevoEstado;
 }
@@ -126,11 +154,24 @@ bool ifUsername (string word) {
 }
 
 void *getUserInfo (string username) {
-    cout << "obteniendo info de " << username << endl;
+    cout << BLUE << "Obteniendo info de " << username << "..." << RESET << endl;
+    connectedUserRequest userRequest;
+    // userRequest.set_userid(0) // Hay que asignarle un valor para el usuario.
+    userRequest.set_username (username);
+
+    ClientMessage clientMessage;
+    clientMessage.set_option (2);
+    clientMessage.set_allocated_connectedusers (&userRequest);
 }
 
 void *sendMessageToUser (string username, string message) {
+    DirectMessageRequest directMessage;
+    directMessage.set_username (username);
+    directMessage.set_message (message);
 
+    ClientMessage clientMessage;
+    clientMessage.set_option (5);
+    clientMessage.set_allocated_directmessage (&directMessage);
 }
 
 void *exit() {
@@ -171,6 +212,7 @@ void *showInfo () {
 }
 
 int main (int argc, char **argv) {
+    GOOGLE_PROTOBUF_VERIFY_VERSION;
 
     if (argc > 4) {
 
@@ -184,6 +226,10 @@ int main (int argc, char **argv) {
         cout << "IP: " << ip << endl;
         cout << "puerto: " << puerto << endl;
         seg = 0;
+
+        estadoActual = "ACTIVO";
+
+        cout << "---------------------------------" << endl;
 
         // Se inicializa el usuario con el server si existe.
         if (sendInfoToServer(nombre, username, ip, puerto) != 0) {
@@ -202,10 +248,10 @@ int main (int argc, char **argv) {
             pthread_join (threadUser, NULL);
             pthread_join (threadState, NULL);
         }
-
-        
     }
 
+    google::protobuf::ShutdownProtobufLibrary();
+    return 1;
 }
 
 
