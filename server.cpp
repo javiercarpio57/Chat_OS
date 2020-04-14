@@ -1,4 +1,4 @@
-//g++ server.cpp mensaje.pb.cc -lprotobuf -o server
+//g++ server.cpp mensaje.pb.cc -lprotobuf -lpthread -o server
 #include <string>
 #include <iostream>
 #include <thread> 
@@ -28,24 +28,26 @@ void getConnectedUsers(connectedUserRequest cur){
     ConnectedUserResponse * response(new ConnectedUserResponse);
     if (cur.userid() == 0){
         //All users
-        ConnectedUser tempConectedUser;
+        ConnectedUser * tempConectedUser;
         for (int i = 0; i < userList.size(); i++){
             user temporalUser = * userList.get_allocator().allocate(i);
-            tempConectedUser.set_userid(temporalUser.userId);
-            tempConectedUser.set_username(temporalUser.username);
-            tempConectedUser.set_status(temporalUser.status);
-            tempConectedUser.set_ip(temporalUser.ip);
-            response->add_connectedusers(); //Fix: Understand how to add parameters
+            tempConectedUser = response->add_connectedusers();
+            tempConectedUser->set_userid(temporalUser.userId);
+            tempConectedUser->set_username(temporalUser.username);
+            tempConectedUser->set_status(temporalUser.status);
+            tempConectedUser->set_ip(temporalUser.ip);
+            
         }
     } else {
         //Single user
-        ConnectedUser tempConectedUser;
+        ConnectedUser * tempConectedUser;
+        tempConectedUser = response->add_connectedusers();
         user temporalUser = * userList.get_allocator().allocate(0); //Fix: Add function to get position of specific ip or username
-        tempConectedUser.set_userid(temporalUser.userId);
-        tempConectedUser.set_username(temporalUser.username);
-        tempConectedUser.set_status(temporalUser.status);
-        tempConectedUser.set_ip(temporalUser.ip);
-        response->add_connectedusers(); //Fix: Understand how to add parameters
+        tempConectedUser->set_userid(temporalUser.userId);
+        tempConectedUser->set_username(temporalUser.username);
+        tempConectedUser->set_status(temporalUser.status);
+        tempConectedUser->set_ip(temporalUser.ip);
+        
     }
 }
 void sendBroadcast(int id, string message){
@@ -66,9 +68,10 @@ void sendBroadcast(int id, string message){
     gM->set_allocated_broadcast(globalResponse);
     binary;
     gM->SerializeToString(&binary);
-    //Add for to send to everybody
+    //Add , send to everybody
 }
-void sendMessage(int id, string message){
+
+void sendMessage(int id, string message){ 
     //Server response to sender 
     DirectMessageResponse * response(new DirectMessageResponse);
     response->set_messagestatus("Send");
@@ -81,11 +84,12 @@ void sendMessage(int id, string message){
     DirectMessage * directMessage(new DirectMessage);
     directMessage->set_message(message);
     directMessage->set_userid("id"); //fix proto should be int
-    ServerMessage * m(new ServerMessage);
-    m->set_option(1); 
-    m->set_allocated_message(directMessage);
+    ServerMessage * pm (new ServerMessage);
+    pm->set_option(1); 
+    pm->set_allocated_message(directMessage);
     binary = "";
-    m->SerializeToString(&binary);
+    pm->SerializeToString(&binary);
+    //Add , send to user
 }
 //Thread code
 void foo(user user, int id ) 
@@ -113,6 +117,7 @@ void foo(user user, int id )
                 acknowledgement = -1 
             }
         }*/
+        acknowledgement = 1 ;//Remove later
     }
     //**Fix: Add condition for failed acknowledgement**
     printf("Acknowledgement was recive");
@@ -160,24 +165,26 @@ int main (int argc, char **argv) {
     //cout << "Username: " << m2.synchronize().username() << endl;
     //cout << "ip: " << m2.synchronize().ip() << endl;
     
-    //Fix: Add infinite loop
-
-    if (m2.option() == 0){
-        printf("Se crea Usuario");
-        //Lookup for username
-        user tempUser ;
-        tempUser.username = m2.synchronize().username();
-        tempUser.ip = m2.synchronize().ip();
-        tempUser.userId = threadCount;
-        tempUser.status = "";
-        threadIdList.push_back(threadCount);
-        userList.push_back(tempUser);
-        queue<ClientMessage> temp;
-        requestList.push_back(temp);
-        threadList.push_back(thread(foo, tempUser, threadCount));
-        threadCount ++ ;
+    //Fix: loop condition and add request list
+    while (true){
+        if (m2.option() == 0){ //Change to entering message
+            printf("Se crea Usuario");
+            //Lookup for username
+            user tempUser ;
+            tempUser.username = m2.synchronize().username();
+            tempUser.ip = m2.synchronize().ip();
+            tempUser.userId = threadCount;
+            tempUser.status = "";
+            threadIdList.push_back(threadCount);
+            userList.push_back(tempUser);
+            queue<ClientMessage> tempQueue;
+            requestList.push_back(tempQueue);
+            threadList.push_back(thread(foo, tempUser, threadCount));
+            threadCount ++ ;
+        } else {
+            //add message to corresponding pile
+        }
     }
-
     
     //Wait for all created threads to end
     std::thread temp;
