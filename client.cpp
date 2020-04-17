@@ -4,6 +4,8 @@
 # include <unistd.h>
 # include <string>
 # include <bits/stdc++.h> 
+# include <sys/socket.h> 
+# include <arpa/inet.h> 
 # include "mensaje.pb.h"
 # include <chrono>
 
@@ -44,12 +46,17 @@ void *exit();
 string input;
 int seg;
 string estadoActual;
+int sock = 0;
 
 void *listen (void *args) {
-    while (input != "salir") {
-        // cout << "Estoy escuchando." << endl;
-        // sleep(10);
+    int sock = 0, valread;
+    char buffer[1024] = {0}; 
+
+    while ((input != "salir") || read(sock, buffer, 1024) != 0) {
+        if (buffer[0] != '\0')
+            printf("Heyyy: %s %d\n", buffer[0], sizeof(buffer));
     }
+
     cout << "Termine de escuchar." << endl;
 }
 
@@ -90,15 +97,15 @@ void *user (void *args) {
 
 void *checkState(void *args) {
     while (input != "salir") {
-        if (seg < inactivoT) {
-            sleep (1);
-            seg++;
-            // cout << "Seg: " << seg << endl;
-        } else {
-            if (estadoActual != "INACTIVO")
-                cambiarEstado("INACTIVO");
+        // if (seg < inactivoT) {
+        //     sleep (1);
+        //     seg++;
+        //     // cout << "Seg: " << seg << endl;
+        // } else {
+        //     if (estadoActual != "INACTIVO")
+        //         cambiarEstado("INACTIVO");
             
-        }
+        // }
     }
 }
 
@@ -106,6 +113,34 @@ void *checkState(void *args) {
 // 1: Success
 // 0: Error. Ya existe el usuario u otro error.
 int sendInfoToServer(string nombre, string username, string ip, string puerto) {
+    struct sockaddr_in serv_addr;
+
+    char buffer[1024] = {0}; 
+    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) 
+    { 
+        printf("\n Socket creation error \n"); 
+        return -1; 
+    } 
+   
+    serv_addr.sin_family = AF_INET; 
+    serv_addr.sin_port = htons(stoi(puerto)); 
+       
+    char newIP[ip.size() + 1];
+    strcpy(newIP, ip.c_str());
+
+    // Convert IPv4 and IPv6 addresses from text to binary form 
+    if(inet_pton(AF_INET, newIP, &serv_addr.sin_addr)<=0)  
+    { 
+        printf("\nInvalid address/ Address not supported \n"); 
+        return -1; 
+    } 
+   
+    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) 
+    { 
+        printf("\nConnection Failed \n"); 
+        return -1; 
+    } 
+
     // Aqui se pone el codigo para enviar al server.
     // ConnectedUser miUsuario;
     // miUsuario.set_username (username);
@@ -120,7 +155,9 @@ int sendInfoToServer(string nombre, string username, string ip, string puerto) {
     ClientMessage clientMessage;
     clientMessage.set_option (1);
     clientMessage.set_allocated_synchronize(myInfo);
-    //  ......
+    //  ...... send(.....)
+
+
     return 1;
 }
 
@@ -130,6 +167,7 @@ void *broadcastMessage (string message) {
     broadcastMessage.set_message (message);
 
     ClientMessage clientMessage;
+    clientMessage.set_option(4);
     clientMessage.set_allocated_broadcast (&broadcastMessage);
 
 }
@@ -172,6 +210,8 @@ void *sendMessageToUser (string username, string message) {
     ClientMessage clientMessage;
     clientMessage.set_option (5);
     clientMessage.set_allocated_directmessage (&directMessage);
+
+    
 }
 
 void *exit() {
