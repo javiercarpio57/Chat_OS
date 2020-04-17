@@ -5,16 +5,23 @@
 #include <stdlib.h> 
 #include <netinet/in.h> 
 #include <string.h> 
+# include "mensaje.pb.h"
+
 #define PORT 8080 
+
+using namespace chat;
+using namespace std;
+
 int main(int argc, char const *argv[]) 
 { 
+    GOOGLE_PROTOBUF_VERIFY_VERSION;
     
     int server_fd, new_socket, valread; 
     struct sockaddr_in address; 
     int opt = 1; 
     int addrlen = sizeof(address); 
     char buffer[1024] = {0}; 
-    char *hello = "Hello from server"; 
+    // char *hello = "Hello from server"; 
        
     // Creating socket file descriptor 
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) 
@@ -53,8 +60,24 @@ int main(int argc, char const *argv[])
         exit(EXIT_FAILURE); 
     } 
     valread = read( new_socket , buffer, 1024); 
-    printf("%s\n",buffer ); 
-    send(new_socket , hello , strlen(hello) , 0 ); 
-    printf("Hello message sent from Server \n"); 
+
+// ------------ PRUEBA DE RECEPCION DE PROTO -----------------------
+    ClientMessage cliente;
+    string msg;
+
+    cliente.ParseFromString(buffer);
+
+    cout << cliente.option () << endl;
+    cout << cliente.synchronize().ip() << endl;
+    cout << cliente.synchronize().username() << endl;
+// -----------------------------------------------------------------
+
+    // printf("%s\n",buffer ); 
+
+
+    // send(new_socket , hello , strlen(hello) , 0 ); 
+    // printf("Hello message sent from Server \n"); 
     return 0; 
+
+    google::protobuf::ShutdownProtobufLibrary();
 } 

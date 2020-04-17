@@ -117,7 +117,7 @@ void sendBySocket (string msg) {
     send (sock, buffer, msg.size() + 1, 0);
 }
 
-void connectToServer (string nombre, string username, string ip, string puerto) {
+int connectToServer (string nombre, string username, string ip, string puerto) {
     struct sockaddr_in serv_addr;
 
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) 
@@ -176,7 +176,7 @@ int sendInfoToServer(string nombre, string username, string ip, string puerto) {
 
 void *broadcastMessage (string message) {
     // Aqui se envia un mensaje a todos los usuarios
-    BroadcastRequest *broadcastMessage = new BroadcastMessage();
+    BroadcastRequest *broadcastMessage = new BroadcastRequest();
     broadcastMessage->set_message (message);
 
     ClientMessage clientMessage;
@@ -221,7 +221,7 @@ void *sendMessageToUser (string username, string message) {
 
     ClientMessage clientMessage;
     clientMessage.set_option (5);
-    clientMessage.set_allocated_directmessage (&directMessage);
+    clientMessage.set_allocated_directmessage (directMessage);
 }
 
 void *exit() {
