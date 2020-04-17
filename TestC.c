@@ -47,6 +47,7 @@ int main(int argc, char const *argv[])
         printf("\nConnection Failed \n"); 
         return -1; 
     } 
+
     send(sock , hello , strlen(hello) , 0 ); 
     printf("Message from %s: \n", Username); 
     valread = read( sock , buffer, 1024); 
