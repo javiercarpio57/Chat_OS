@@ -47,14 +47,16 @@ string input;
 int seg;
 string estadoActual;
 int sock = 0;
+bool isAlive = true;
 
 void *listen (void *args) {
-    int sock = 0, valread;
+    int valread;
     char buffer[1024] = {0}; 
 
-    while ((input != "salir") || read(sock, buffer, 1024) != 0) {
-        if (buffer[0] != '\0')
-            printf("Heyyy: %s %d\n", buffer[0], sizeof(buffer));
+    while (isAlive) {
+        valread = read(sock, buffer, 1024);
+        if ((buffer[0] != '\0') && (valread != 0))
+            printf("Heyyy: %s\n", buffer);
     }
 
     cout << "Termine de escuchar." << endl;
@@ -64,7 +66,7 @@ void *user (void *args) {
     cout << "Si desea terminar el chat, escribe: 'salir'" << endl;
     cout << "Para obtener mas informacion sobre el uso del chat, escribe: 'info'" << endl;
 
-    while (input != "salir") {
+    while (isAlive) {
         getline (cin, input);
         seg = 0;
 
@@ -96,16 +98,15 @@ void *user (void *args) {
 }
 
 void *checkState(void *args) {
-    while (input != "salir") {
-        // if (seg < inactivoT) {
-        //     sleep (1);
-        //     seg++;
-        //     // cout << "Seg: " << seg << endl;
-        // } else {
-        //     if (estadoActual != "INACTIVO")
-        //         cambiarEstado("INACTIVO");
-            
-        // }
+    while (isAlive) {
+        if (seg < inactivoT) {
+            sleep (1);
+            seg++;
+            // cout << "Seg: " << seg << endl;
+        } else {
+            if (estadoActual != "INACTIVO")
+                cambiarEstado("INACTIVO");
+        }
     }
 }
 
@@ -115,7 +116,6 @@ void *checkState(void *args) {
 int sendInfoToServer(string nombre, string username, string ip, string puerto) {
     struct sockaddr_in serv_addr;
 
-    char buffer[1024] = {0}; 
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) 
     { 
         printf("\n Socket creation error \n"); 
@@ -137,7 +137,7 @@ int sendInfoToServer(string nombre, string username, string ip, string puerto) {
    
     if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) 
     { 
-        printf("\nConnection Failed \n"); 
+        cout << RED << "\nConnection Failed \n" << RESET << endl;
         return -1; 
     } 
 
@@ -174,12 +174,12 @@ void *broadcastMessage (string message) {
 
 void *cambiarEstado (string nuevoEstado) {
     // Aqui se cambia a otro estado
-    ChangeStatusRequest changeStatus;
-    changeStatus.set_status (nuevoEstado);
+    ChangeStatusRequest *changeStatus = new ChangeStatusRequest();
+    changeStatus->set_status (nuevoEstado);
 
     ClientMessage clientMessage;
     clientMessage.set_option (3);
-    clientMessage.set_allocated_changestatus (&changeStatus);
+    clientMessage.set_allocated_changestatus (changeStatus);
 
     cout << "Estado nuevo: " << nuevoEstado << endl;
     estadoActual = nuevoEstado;
@@ -216,6 +216,8 @@ void *sendMessageToUser (string username, string message) {
 
 void *exit() {
     // Si se hace alguna accion para salir.
+    cout << "Saliendo..." << endl;
+    isAlive = false;
 }
 
 // Obtiene la primera palabra de 'phrase'
