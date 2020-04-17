@@ -110,10 +110,14 @@ void *checkState(void *args) {
     }
 }
 
-// Si el usuario se puede inscribir al server...
-// 1: Success
-// 0: Error. Ya existe el usuario u otro error.
-int sendInfoToServer(string nombre, string username, string ip, string puerto) {
+void sendBySocket (string msg) {
+    char buffer[1024] = {0};
+    strcpy(buffer, msg.c_str());
+
+    send (sock, buffer, msg.size() + 1, 0);
+}
+
+void connectToServer (string nombre, string username, string ip, string puerto) {
     struct sockaddr_in serv_addr;
 
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) 
@@ -131,15 +135,22 @@ int sendInfoToServer(string nombre, string username, string ip, string puerto) {
     // Convert IPv4 and IPv6 addresses from text to binary form 
     if(inet_pton(AF_INET, newIP, &serv_addr.sin_addr)<=0)  
     { 
-        printf("\nInvalid address/ Address not supported \n"); 
+        cout << RED << "\nInvalid address/ Address not supported \n" << RESET << endl;
         return -1; 
     } 
    
     if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) 
     { 
-        cout << RED << "\nConnection Failed \n" << RESET << endl;
+        cout << RED << "\nConnection Failed\n" << RESET << endl;
         return -1; 
-    } 
+    }
+}
+
+// Si el usuario se puede inscribir al server...
+// 1: Success
+// 0: Error. Ya existe el usuario u otro error.
+int sendInfoToServer(string nombre, string username, string ip, string puerto) {
+    connectToServer (nombre, username, ip, puerto);
 
     // Aqui se pone el codigo para enviar al server.
     // ConnectedUser miUsuario;
@@ -155,21 +166,22 @@ int sendInfoToServer(string nombre, string username, string ip, string puerto) {
     ClientMessage clientMessage;
     clientMessage.set_option (1);
     clientMessage.set_allocated_synchronize(myInfo);
-    //  ...... send(.....)
+    
+    string msgToServer;
+    clientMessage.SerializeToString(&msgToServer);
 
-
+    sendBySocket (msgToServer);
     return 1;
 }
 
 void *broadcastMessage (string message) {
     // Aqui se envia un mensaje a todos los usuarios
-    BroadcastRequest broadcastMessage;
-    broadcastMessage.set_message (message);
+    BroadcastRequest *broadcastMessage = new BroadcastMessage();
+    broadcastMessage->set_message (message);
 
     ClientMessage clientMessage;
     clientMessage.set_option(4);
-    clientMessage.set_allocated_broadcast (&broadcastMessage);
-
+    clientMessage.set_allocated_broadcast (broadcastMessage);
 }
 
 void *cambiarEstado (string nuevoEstado) {
@@ -193,25 +205,23 @@ bool ifUsername (string word) {
 
 void *getUserInfo (string username) {
     cout << BLUE << "Obteniendo info de " << username << "..." << RESET << endl;
-    connectedUserRequest userRequest;
+    connectedUserRequest *userRequest = new connectedUserRequest();
     // userRequest.set_userid(0) // Hay que asignarle un valor para el usuario.
-    userRequest.set_username (username);
+    userRequest -> set_username (username);
 
     ClientMessage clientMessage;
     clientMessage.set_option (2);
-    clientMessage.set_allocated_connectedusers (&userRequest);
+    clientMessage.set_allocated_connectedusers (userRequest);
 }
 
 void *sendMessageToUser (string username, string message) {
-    DirectMessageRequest directMessage;
-    directMessage.set_username (username);
-    directMessage.set_message (message);
+    DirectMessageRequest *directMessage = new DirectMessageRequest();
+    directMessage -> set_username (username);
+    directMessage -> set_message (message);
 
     ClientMessage clientMessage;
     clientMessage.set_option (5);
     clientMessage.set_allocated_directmessage (&directMessage);
-
-    
 }
 
 void *exit() {
