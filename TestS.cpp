@@ -36,6 +36,8 @@ int createSocket () {
     address.sin_family = AF_INET; 
     address.sin_addr.s_addr = INADDR_ANY; 
     address.sin_port = htons( PORT ); 
+
+    cout << AF_INET << endl;
        
     // Forcefully attaching socket to the port 8080 
     if (bind(server_fd, (struct sockaddr *)&address,  
@@ -66,7 +68,8 @@ int main(int argc, char const *argv[])
     char buffer[1024] = {0}; 
 
     while (true) {
-        int valread = read( createSocket() , buffer, 1024); 
+        int socket = createSocket();
+        int valread = read( socket , buffer, 1024); 
 
         // ------------ PRUEBA DE RECEPCION DE PROTO -----------------------
         ClientMessage cliente;
@@ -77,6 +80,8 @@ int main(int argc, char const *argv[])
         cout << cliente.option () << endl;
         cout << cliente.synchronize().ip() << endl;
         cout << cliente.synchronize().username() << endl;
+        cout << socket << endl;
+        cout << "-------------------------------------" << endl;
         // -----------------------------------------------------------------
     }
     

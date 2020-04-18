@@ -50,6 +50,7 @@ int seg;
 string estadoActual;
 int sock = 0;
 bool isAlive = true;
+bool askChangeStatus = false;
 
 int userId;
 
@@ -127,6 +128,7 @@ void *listen (void *args) {
                 string messageStatus = serverMessage.broadcastresponse().messagestatus();
 
                 cout << YELLOW << messageStatus << RESET << endl;
+                askChangeStatus = false;
                 break;
             }
             case 8: {
@@ -187,8 +189,10 @@ void *checkState(void *args) {
             sleep (1);
             seg++;
         } else {
-            if (estadoActual != "INACTIVO")
+            if ((estadoActual != "INACTIVO") && (!askChangeStatus)) {
                 cambiarEstado("INACTIVO");
+                askChangeStatus = true;
+            }
         }
     }
 }
@@ -285,6 +289,7 @@ void *cambiarEstado (string nuevoEstado) {
     clientMessage.SerializeToString (&msgToServer);
 
     sendBySocket (msgToServer);
+    cout << "Cambiando de estado..." << endl;
 }
 
 bool ifUsername (string word) {
