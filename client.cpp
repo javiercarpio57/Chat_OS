@@ -49,17 +49,98 @@ string estadoActual;
 int sock = 0;
 bool isAlive = true;
 
+int userId;
+
 void *listen (void *args) {
     int valread;
     char buffer[1024] = {0}; 
 
     while (isAlive) {
         valread = read(sock, buffer, 1024);
-        if ((buffer[0] != '\0') && (valread != 0))
-            printf("Heyyy: %s\n", buffer);
+        if ((buffer[0] != '\0') && (valread != 0)) {
+            ServerMessage serverMessage;
+            string server;
+
+            serverMessage.ParseFromString (server);
+
+            switch (serverMessage.option()) {
+            case 1: {
+                string message = serverMessage.broadcast().message();
+                int id = serverMessage.broadcast().userid();
+
+                cout << CYAN << "(" << id << "):" << RESET << GREEN << message << RESET << endl;
+
+                break;
+            }
+            case 2: {
+                string message = serverMessage.message().message();
+                int id = serverMessage.message().userid();
+
+                cout << BLUE << "(" << id << " en privado):" << RESET << GREEN << message << RESET << endl;
+                break;
+            }
+            case 3: {
+                string error = serverMessage.error().errormessage();
+
+                cout << RED << "ERROR: " << error << RESET << endl;
+                break;
+            }
+            case 4: {
+                userId = serverMessage.myinforesponse().userid();
+
+                MyInfoAcknowledge *myInfoAcknowledge = new MyInfoAcknowledge;
+                myInfoAcknowledge -> set_userid(userId);
+
+                ClientMessage clientMessage;
+                clientMessage.set_option (6);
+                clientMessage.set_allocated_acknowledge (myInfoAcknowledge);
+
+                string msgToServer;
+                clientMessage.SerializeToString (&msgToServer);
+                sendBySocket (msgToServer);
+
+                break;
+            }
+            case 5: {
+                cout << BLUE << "Los usuarios conectados son: " << RESET << endl;
+                for (int i = 0; i < serverMessage.connecteduserresponse().connectedusers_size(); i++) {
+                    ConnectedUser tmpUser = serverMessage.connecteduserresponse().connectedusers(i);
+                    cout << BLUE << "----------------------------------" << RESET << endl;
+                    cout << BLUE << "\tUSERNAME: " << tmpUser.username() << RESET << endl;
+                    cout << BLUE << "\tSTATUS: " << tmpUser.status() << RESET << endl;
+                    cout << BLUE << "\tUSER ID: " << tmpUser.userid() << RESET << endl;
+                    cout << BLUE << "\tIP: " << tmpUser.ip() << RESET << endl;
+                    cout << BLUE << "----------------------------------" << RESET << endl;
+                }
+                break;
+            }
+            case 6: {
+                int id = serverMessage.changestatusresponse().userid();
+                string status = serverMessage.changestatusresponse().status();
+
+                cout << YELLOW << "Estado nuevo: " << status << RESET << endl;
+                estadoActual = status;            
+                break;
+            }
+            case 7: {
+                string messageStatus = serverMessage.broadcastresponse().messagestatus();
+
+                cout << YELLOW << messageStatus << RESET << endl;
+                break;
+            }
+            case 8: {
+                string messageStatus = serverMessage.directmessageresponse().messagestatus();
+
+                cout << YELLOW << messageStatus << RESET << endl;
+                break;
+            }
+            default:
+                break;
+            }
+        }
     }
 
-    cout << "Termine de escuchar." << endl;
+    cout << "\nTermine de escuchar.\n" << endl;
 }
 
 void *user (void *args) {
@@ -85,6 +166,8 @@ void *user (void *args) {
             cambiarEstado (message);
         else if (word == "salir")
             exit();
+        else if (word == "usuarios")
+            getAllUsers ();
         else
             if (ifUsername) {
                 if (message == "")
@@ -102,7 +185,6 @@ void *checkState(void *args) {
         if (seg < inactivoT) {
             sleep (1);
             seg++;
-            // cout << "Seg: " << seg << endl;
         } else {
             if (estadoActual != "INACTIVO")
                 cambiarEstado("INACTIVO");
@@ -110,7 +192,7 @@ void *checkState(void *args) {
     }
 }
 
-void sendBySocket (string msg) {
+void *sendBySocket (string msg) {
     char buffer[1024] = {0};
     strcpy(buffer, msg.c_str());
 
@@ -168,7 +250,7 @@ int sendInfoToServer(string nombre, string username, string ip, string puerto) {
     clientMessage.set_allocated_synchronize(myInfo);
     
     string msgToServer;
-    clientMessage.SerializeToString(&msgToServer);
+    clientMessage.SerializeToString (&msgToServer);
 
     sendBySocket (msgToServer);
     return 1;
@@ -182,6 +264,11 @@ void *broadcastMessage (string message) {
     ClientMessage clientMessage;
     clientMessage.set_option(4);
     clientMessage.set_allocated_broadcast (broadcastMessage);
+
+    string msgToServer;
+    clientMessage.SerializeToString (&msgToServer);
+
+    sendBySocket (msgToServer);
 }
 
 void *cambiarEstado (string nuevoEstado) {
@@ -193,8 +280,10 @@ void *cambiarEstado (string nuevoEstado) {
     clientMessage.set_option (3);
     clientMessage.set_allocated_changestatus (changeStatus);
 
-    cout << "Estado nuevo: " << nuevoEstado << endl;
-    estadoActual = nuevoEstado;
+    string msgToServer;
+    clientMessage.SerializeToString (&msgToServer);
+
+    sendBySocket (msgToServer);
 }
 
 bool ifUsername (string word) {
@@ -212,6 +301,11 @@ void *getUserInfo (string username) {
     ClientMessage clientMessage;
     clientMessage.set_option (2);
     clientMessage.set_allocated_connectedusers (userRequest);
+
+    string msgToServer;
+    clientMessage.SerializeToString (&msgToServer);
+
+    sendBySocket (msgToServer);
 }
 
 void *sendMessageToUser (string username, string message) {
@@ -222,6 +316,25 @@ void *sendMessageToUser (string username, string message) {
     ClientMessage clientMessage;
     clientMessage.set_option (5);
     clientMessage.set_allocated_directmessage (directMessage);
+
+    string msgToServer;
+    clientMessage.SerializeToString (&msgToServer);
+
+    sendBySocket (msgToServer);
+}
+
+void *getAllUsers () {
+    connectedUserRequest *userRequest = new connectedUserRequest();
+    userRequest -> set_userid(0);
+
+    ClientMessage clientMessage;
+    clientMessage.set_option (2);
+    clientMessage.set_allocated_connectedusers (userRequest);
+
+    string msgToServer;
+    clientMessage.SerializeToString (&msgToServer);
+
+    sendBySocket (msgToServer);
 }
 
 void *exit() {
@@ -256,10 +369,12 @@ void *showInfo () {
     cout << GREEN "Las palabras clave estan encerradas en comillas simples ('')." << RESET << endl;
     cout << GREEN "\t" << BOLDYELLOW << "'info'" << GREEN << ": para solicitar informacion de como usar el chat." << RESET << endl;
     cout << GREEN "\t" << BOLDYELLOW << "'salir'" << GREEN << ": para desconectarse del chat." << RESET << endl;
+    cout << GREEN "\t" << BOLDYELLOW << "'usuarios'" << GREEN << ": obtener todos los usuarios conectados." << RESET << endl;
     cout << GREEN "\t" << BOLDYELLOW << "<username>" << GREEN << ": al ingresar el username de un usuario conectado, puedes ver informacion de el. " << RESET << endl;
     cout << GREEN "\t" << BOLDYELLOW << "<username> <mensaje>" << GREEN << ": para enviar el <mensaje> al usuario <username>. " << RESET << endl;
     cout << GREEN "\t" << BOLDYELLOW << "'broadcast' <mensaje>" << GREEN << ": para enviar el <mensaje> a todos los usuarios conectados." << RESET << endl;
     cout << GREEN "\t" << BOLDYELLOW << "'estado' <nuevo estado>" << GREEN << ": para cambiar tu estado actual a <nuevo estado>" << RESET << endl;
+
     cout << YELLOW << "-------------------------------------------------------------------------" << RESET << endl;
 }
 
