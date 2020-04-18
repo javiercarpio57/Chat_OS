@@ -329,6 +329,7 @@ int main (int argc, char **argv) {
     //FIX user id cannot be 0
     GOOGLE_PROTOBUF_VERIFY_VERSION;
     //Message setup
+    /*
     MyInfoSynchronize * miInfo(new MyInfoSynchronize);
     miInfo->set_username("username123");
     miInfo->set_ip("127.0.0.1");
@@ -338,25 +339,27 @@ int main (int argc, char **argv) {
     string binary;
     m->SerializeToString(&binary);
     binaryList.push(binary);
-    
+    */
     
     int sock, valread; 
     struct sockaddr_in address;  
     char buffer[1024] = {0}; 
         
 
-    //sock = createSocket("Mi ip");
+    sock = createSocket("Mi ip");
   
-    std::thread main (root); 
+    //std::thread main (root); 
     
     while(true){
         valread = read(sock, buffer, 1024);
         if ((buffer[0] != '\0') && (valread != 0)) {
-            binaryList.push(buffer);
+            printf("%s", buffer);
+            //binaryList.push(buffer);
+            buffer[1024] = {0}; 
         }
     } 
 
-    main.join(); 
+    //main.join(); 
     google::protobuf::ShutdownProtobufLibrary();
 }
 
