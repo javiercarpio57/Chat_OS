@@ -53,15 +53,14 @@ int userId;
 
 void *listen (void *args) {
     int valread;
-    char buffer[1024] = {0}; 
 
     while (isAlive) {
+        char buffer[1024] = {0}; 
         valread = read(sock, buffer, 1024);
         if ((buffer[0] != '\0') && (valread != 0)) {
             ServerMessage serverMessage;
-            string server;
 
-            serverMessage.ParseFromString (server);
+            serverMessage.ParseFromString (buffer);
 
             switch (serverMessage.option()) {
             case 1: {

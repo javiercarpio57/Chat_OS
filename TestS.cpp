@@ -12,15 +12,11 @@
 using namespace chat;
 using namespace std;
 
-int main(int argc, char const *argv[]) 
-{ 
-    GOOGLE_PROTOBUF_VERIFY_VERSION;
-    
+int createSocket () {
     int server_fd, new_socket, valread; 
     struct sockaddr_in address; 
     int opt = 1; 
     int addrlen = sizeof(address); 
-    char buffer[1024] = {0}; 
     // char *hello = "Hello from server"; 
        
     // Creating socket file descriptor 
@@ -36,7 +32,7 @@ int main(int argc, char const *argv[])
     { 
         perror("setsockopt"); 
         exit(EXIT_FAILURE); 
-    } 
+    }
     address.sin_family = AF_INET; 
     address.sin_addr.s_addr = INADDR_ANY; 
     address.sin_port = htons( PORT ); 
@@ -59,18 +55,31 @@ int main(int argc, char const *argv[])
         perror("accept"); 
         exit(EXIT_FAILURE); 
     } 
-    valread = read( new_socket , buffer, 1024); 
 
-// ------------ PRUEBA DE RECEPCION DE PROTO -----------------------
-    ClientMessage cliente;
-    string msg;
+    return new_socket;
+}
 
-    cliente.ParseFromString(buffer);
+int main(int argc, char const *argv[]) 
+{ 
+    GOOGLE_PROTOBUF_VERIFY_VERSION;
+    
+    char buffer[1024] = {0}; 
 
-    cout << cliente.option () << endl;
-    cout << cliente.synchronize().ip() << endl;
-    cout << cliente.synchronize().username() << endl;
-// -----------------------------------------------------------------
+    while (true) {
+        int valread = read( createSocket() , buffer, 1024); 
+
+        // ------------ PRUEBA DE RECEPCION DE PROTO -----------------------
+        ClientMessage cliente;
+        string msg;
+
+        cliente.ParseFromString(buffer);
+
+        cout << cliente.option () << endl;
+        cout << cliente.synchronize().ip() << endl;
+        cout << cliente.synchronize().username() << endl;
+        // -----------------------------------------------------------------
+    }
+    
 
     // printf("%s\n",buffer ); 
 
