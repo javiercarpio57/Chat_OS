@@ -15,8 +15,6 @@ struct user {
    int userId;
    string status;
 };
-//queue<std::thread> threadQueue;
-//queue<int> dataQueue;
 list<thread> threadList;
 list<int> threadIdList;
 list<user> userList;
@@ -24,13 +22,23 @@ list<queue<ClientMessage>> requestList;
 
 int threadCount = 0;
 
+user getUser(int id){
+    std::list<user>::iterator it = userList.begin();
+    user tempUser = *it;
+    while (tempUser.userId != id) {
+        std::advance(it, 1);
+        tempUser = *it;
+    }
+    return *it;
+}
+
 void getConnectedUsers(connectedUserRequest cur){
     ConnectedUserResponse * response(new ConnectedUserResponse);
     if (cur.userid() == 0){
         //All users
         ConnectedUser * tempConectedUser;
         for (int i = 0; i < userList.size(); i++){
-            user temporalUser = * userList.get_allocator().allocate(i);
+            user temporalUser = getUser(i); //Change for the new form
             tempConectedUser = response->add_connectedusers();
             tempConectedUser->set_userid(temporalUser.userId);
             tempConectedUser->set_username(temporalUser.username);
@@ -42,7 +50,7 @@ void getConnectedUsers(connectedUserRequest cur){
         //Single user
         ConnectedUser * tempConectedUser;
         tempConectedUser = response->add_connectedusers();
-        user temporalUser = * userList.get_allocator().allocate(0); //Fix: Add function to get position of specific ip or username
+        user temporalUser = getUser(0); 
         tempConectedUser->set_userid(temporalUser.userId);
         tempConectedUser->set_username(temporalUser.username);
         tempConectedUser->set_status(temporalUser.status);
@@ -103,7 +111,11 @@ void foo(user user, int id )
     m->SerializeToString(&binary);
     printf("Response from server to client\n");
     //Asign requestList
-    queue<ClientMessage> request = * requestList.get_allocator().allocate(id);
+    
+    std::list<queue<ClientMessage>>::iterator it = requestList.begin();
+    std::advance(it, id);
+    queue<ClientMessage> request = *it;
+
     int acknowledgement = 0;
     //waiting for acknowledgement
     while(acknowledgement == 0){
@@ -120,9 +132,10 @@ void foo(user user, int id )
         acknowledgement = 1 ;//Remove later
     }
     //**Fix: Add condition for failed acknowledgement**
-    printf("Acknowledgement was recive");
+    printf("Acknowledgement was recive\n");
     int working = 0;
     //waiting for request from user
+    
     while(working == 0){
         if (!request.empty()){
             ClientMessage temp = request.front();
@@ -156,19 +169,17 @@ int main (int argc, char **argv) {
     m->set_allocated_synchronize(miInfo);
     string binary;
     m->SerializeToString(&binary);
+
+    queue<string> binaryList;
+    binaryList.push(binary);
     // Message desynchronize
     ClientMessage m2;
-
-    m2.ParseFromString(binary);
-    
-    //cout << "Option: " << m2.option() << endl;
-    //cout << "Username: " << m2.synchronize().username() << endl;
-    //cout << "ip: " << m2.synchronize().ip() << endl;
-    
+    m2.ParseFromString(binaryList.front());
+    binaryList.pop();
     //Fix: loop condition and add request list
-    while (true){
+    //while (true){
         if (m2.option() == 0){ //Change to entering message
-            printf("Se crea Usuario");
+            printf("User created\n");
             //Lookup for username
             user tempUser ;
             tempUser.username = m2.synchronize().username();
@@ -184,9 +195,9 @@ int main (int argc, char **argv) {
         } else {
             //add message to corresponding pile
         }
-    }
-    
+    //}
     //Wait for all created threads to end
+    
     std::thread temp;
     for (int i = 0; i< threadCount; i++){
         threadList.front().join();
