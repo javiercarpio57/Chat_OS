@@ -4,6 +4,8 @@
 # include <unistd.h>
 # include <string>
 # include <bits/stdc++.h> 
+# include <sys/socket.h> 
+# include <arpa/inet.h> 
 # include "mensaje.pb.h"
 # include <chrono>
 
@@ -44,12 +46,19 @@ void *exit();
 string input;
 int seg;
 string estadoActual;
+int sock = 0;
+bool isAlive = true;
 
 void *listen (void *args) {
-    while (input != "salir") {
-        // cout << "Estoy escuchando." << endl;
-        // sleep(10);
+    int valread;
+    char buffer[1024] = {0}; 
+
+    while (isAlive) {
+        valread = read(sock, buffer, 1024);
+        if ((buffer[0] != '\0') && (valread != 0))
+            printf("Heyyy: %s\n", buffer);
     }
+
     cout << "Termine de escuchar." << endl;
 }
 
@@ -57,7 +66,7 @@ void *user (void *args) {
     cout << "Si desea terminar el chat, escribe: 'salir'" << endl;
     cout << "Para obtener mas informacion sobre el uso del chat, escribe: 'info'" << endl;
 
-    while (input != "salir") {
+    while (isAlive) {
         getline (cin, input);
         seg = 0;
 
@@ -89,7 +98,7 @@ void *user (void *args) {
 }
 
 void *checkState(void *args) {
-    while (input != "salir") {
+    while (isAlive) {
         if (seg < inactivoT) {
             sleep (1);
             seg++;
@@ -97,8 +106,43 @@ void *checkState(void *args) {
         } else {
             if (estadoActual != "INACTIVO")
                 cambiarEstado("INACTIVO");
-            
         }
+    }
+}
+
+void sendBySocket (string msg) {
+    char buffer[1024] = {0};
+    strcpy(buffer, msg.c_str());
+
+    send (sock, buffer, msg.size() + 1, 0);
+}
+
+int connectToServer (string nombre, string username, string ip, string puerto) {
+    struct sockaddr_in serv_addr;
+
+    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) 
+    { 
+        printf("\n Socket creation error \n"); 
+        return -1; 
+    } 
+   
+    serv_addr.sin_family = AF_INET; 
+    serv_addr.sin_port = htons(stoi(puerto)); 
+       
+    char newIP[ip.size() + 1];
+    strcpy(newIP, ip.c_str());
+
+    // Convert IPv4 and IPv6 addresses from text to binary form 
+    if(inet_pton(AF_INET, newIP, &serv_addr.sin_addr)<=0)  
+    { 
+        cout << RED << "\nInvalid address/ Address not supported \n" << RESET << endl;
+        return -1; 
+    } 
+   
+    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) 
+    { 
+        cout << RED << "\nConnection Failed\n" << RESET << endl;
+        return -1; 
     }
 }
 
@@ -106,6 +150,8 @@ void *checkState(void *args) {
 // 1: Success
 // 0: Error. Ya existe el usuario u otro error.
 int sendInfoToServer(string nombre, string username, string ip, string puerto) {
+    connectToServer (nombre, username, ip, puerto);
+
     // Aqui se pone el codigo para enviar al server.
     // ConnectedUser miUsuario;
     // miUsuario.set_username (username);
@@ -120,28 +166,32 @@ int sendInfoToServer(string nombre, string username, string ip, string puerto) {
     ClientMessage clientMessage;
     clientMessage.set_option (1);
     clientMessage.set_allocated_synchronize(myInfo);
-    //  ......
+    
+    string msgToServer;
+    clientMessage.SerializeToString(&msgToServer);
+
+    sendBySocket (msgToServer);
     return 1;
 }
 
 void *broadcastMessage (string message) {
     // Aqui se envia un mensaje a todos los usuarios
-    BroadcastRequest broadcastMessage;
-    broadcastMessage.set_message (message);
+    BroadcastRequest *broadcastMessage = new BroadcastRequest();
+    broadcastMessage->set_message (message);
 
     ClientMessage clientMessage;
-    clientMessage.set_allocated_broadcast (&broadcastMessage);
-
+    clientMessage.set_option(4);
+    clientMessage.set_allocated_broadcast (broadcastMessage);
 }
 
 void *cambiarEstado (string nuevoEstado) {
     // Aqui se cambia a otro estado
-    ChangeStatusRequest changeStatus;
-    changeStatus.set_status (nuevoEstado);
+    ChangeStatusRequest *changeStatus = new ChangeStatusRequest();
+    changeStatus->set_status (nuevoEstado);
 
     ClientMessage clientMessage;
     clientMessage.set_option (3);
-    clientMessage.set_allocated_changestatus (&changeStatus);
+    clientMessage.set_allocated_changestatus (changeStatus);
 
     cout << "Estado nuevo: " << nuevoEstado << endl;
     estadoActual = nuevoEstado;
@@ -155,27 +205,29 @@ bool ifUsername (string word) {
 
 void *getUserInfo (string username) {
     cout << BLUE << "Obteniendo info de " << username << "..." << RESET << endl;
-    connectedUserRequest userRequest;
+    connectedUserRequest *userRequest = new connectedUserRequest();
     // userRequest.set_userid(0) // Hay que asignarle un valor para el usuario.
-    userRequest.set_username (username);
+    userRequest -> set_username (username);
 
     ClientMessage clientMessage;
     clientMessage.set_option (2);
-    clientMessage.set_allocated_connectedusers (&userRequest);
+    clientMessage.set_allocated_connectedusers (userRequest);
 }
 
 void *sendMessageToUser (string username, string message) {
-    DirectMessageRequest directMessage;
-    directMessage.set_username (username);
-    directMessage.set_message (message);
+    DirectMessageRequest *directMessage = new DirectMessageRequest();
+    directMessage -> set_username (username);
+    directMessage -> set_message (message);
 
     ClientMessage clientMessage;
     clientMessage.set_option (5);
-    clientMessage.set_allocated_directmessage (&directMessage);
+    clientMessage.set_allocated_directmessage (directMessage);
 }
 
 void *exit() {
     // Si se hace alguna accion para salir.
+    cout << "Saliendo..." << endl;
+    isAlive = false;
 }
 
 // Obtiene la primera palabra de 'phrase'
