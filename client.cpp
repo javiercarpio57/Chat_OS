@@ -42,6 +42,8 @@ bool ifUsername (string word);
 void *getUserInfo (string username);
 void *sendMessageToUser (string username, string message);
 void *exit();
+void *sendBySocket(string msgToServer);
+void *getAllUsers();
 
 string input;
 int seg;
@@ -340,6 +342,7 @@ void *exit() {
     // Si se hace alguna accion para salir.
     cout << "Saliendo..." << endl;
     isAlive = false;
+    exit(0);
 }
 
 // Obtiene la primera palabra de 'phrase'
