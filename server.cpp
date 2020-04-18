@@ -20,6 +20,7 @@ list <thread> threadList;
 list <int> threadIdList;
 list <user> userList;
 list <queue<ClientMessage>> requestList;
+queue<string> binaryList;
 
 int threadCount = 0;
 
@@ -211,7 +212,47 @@ void foo(user user, int id )
         }
     }
 }
-
+void root() {
+    // Message desynchronize
+    ClientMessage m2;
+    //while (true){
+        if (!binaryList.empty()){
+            m2.ParseFromString(binaryList.front());
+            binaryList.pop();
+        
+            if (m2.option() == 0){ //Change to entering message
+                printf("User created\n");
+                //Lookup for username
+                user tempUser ;
+                tempUser.username = m2.synchronize().username();
+                tempUser.ip = m2.synchronize().ip();
+                tempUser.userId = threadCount;
+                tempUser.status = "";
+                threadIdList.push_back(threadCount);
+                userList.push_back(tempUser);
+                queue<ClientMessage> tempQueue;
+                requestList.push_back(tempQueue);
+                threadList.push_back(thread(foo, tempUser, threadCount));
+                threadCount ++ ;
+            } else {
+                //Get position of user 
+                int pos = getUserPos(m2.userid());
+                //Add to user thread request queue
+                std::list<queue<ClientMessage>>::iterator it = requestList.begin();
+                std::advance(it, pos);
+                queue<ClientMessage> request = *it;
+                request.push(m2);
+            }
+        }
+    //}
+    //Wait for all created threads to end
+    
+    std::thread temp;
+    for (int i = 0; i< threadCount; i++){
+        threadList.front().join();
+        threadList.pop_front();
+    }
+}
 int main (int argc, char **argv) {
     //FIX user id cannot be 0
     GOOGLE_PROTOBUF_VERIFY_VERSION;
@@ -224,47 +265,12 @@ int main (int argc, char **argv) {
     m->set_allocated_synchronize(miInfo);
     string binary;
     m->SerializeToString(&binary);
-
-    queue<string> binaryList;
     binaryList.push(binary);
-    // Message desynchronize
-    ClientMessage m2;
-    m2.ParseFromString(binaryList.front());
-    binaryList.pop();
-    //Fix: loop condition and add request list
-    //Fix: id not be 0
-    while (true){
-        if (m2.option() == 0){ //Change to entering message
-            printf("User created\n");
-            //Lookup for username
-            user tempUser ;
-            tempUser.username = m2.synchronize().username();
-            tempUser.ip = m2.synchronize().ip();
-            tempUser.userId = threadCount;
-            tempUser.status = "";
-            threadIdList.push_back(threadCount);
-            userList.push_back(tempUser);
-            queue<ClientMessage> tempQueue;
-            requestList.push_back(tempQueue);
-            threadList.push_back(thread(foo, tempUser, threadCount));
-            threadCount ++ ;
-        } else {
-            //Get position of user 
-            int pos = getUserPos(m2.userid());
-            //Add to user thread request queue
-            std::list<queue<ClientMessage>>::iterator it = requestList.begin();
-            std::advance(it, pos);
-            queue<ClientMessage> request = *it;
-            request.push(m2);
-        }
-    }
-    //Wait for all created threads to end
-    
-    std::thread temp;
-    for (int i = 0; i< threadCount; i++){
-        threadList.front().join();
-        threadList.pop_front();
-    }
+    std::thread main (root); 
+    while(true){
+        //Leer cosas y pushearlas
+    } 
+    main.join();
     google::protobuf::ShutdownProtobufLibrary();
 }
 
