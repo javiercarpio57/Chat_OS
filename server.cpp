@@ -15,10 +15,11 @@ struct user {
    int userId;
    string status;
 };
-list<thread> threadList;
-list<int> threadIdList;
-list<user> userList;
-list<queue<ClientMessage>> requestList;
+
+list <thread> threadList;
+list <int> threadIdList;
+list <user> userList;
+list <queue<ClientMessage>> requestList;
 
 int threadCount = 0;
 
@@ -32,13 +33,40 @@ user getUser(int id){
     return *it;
 }
 
+int getUserPos(int id){
+    std::list<user>::iterator it = userList.begin();
+    user tempUser = *it;
+    int cont = 0;
+    while (tempUser.userId != id) {
+        std::advance(it, 1);
+        tempUser = *it;
+        cont++;
+    }
+    return cont;
+}
+
+void changeStatusInList(int id, string status){
+    std::list<user>::iterator it = userList.begin();
+    user tempUser = *it;
+    int cont = 0;
+    while (tempUser.userId != id) {
+        std::advance(it, 1);
+        tempUser = *it;
+    }
+    tempUser.status = status;
+    //Sustitute value
+    userList.erase(it);
+    userList.insert(it, tempUser);
+    
+}
+
 void getConnectedUsers(connectedUserRequest cur){
     ConnectedUserResponse * response(new ConnectedUserResponse);
     if (cur.userid() == 0){
         //All users
         ConnectedUser * tempConectedUser;
         for (int i = 0; i < userList.size(); i++){
-            user temporalUser = getUser(i); //Change for the new form
+            user temporalUser = getUser(i); 
             tempConectedUser = response->add_connectedusers();
             tempConectedUser->set_userid(temporalUser.userId);
             tempConectedUser->set_username(temporalUser.username);
@@ -50,7 +78,7 @@ void getConnectedUsers(connectedUserRequest cur){
         //Single user
         ConnectedUser * tempConectedUser;
         tempConectedUser = response->add_connectedusers();
-        user temporalUser = getUser(0); 
+        user temporalUser = getUser(cur.userid()); 
         tempConectedUser->set_userid(temporalUser.userId);
         tempConectedUser->set_username(temporalUser.username);
         tempConectedUser->set_status(temporalUser.status);
@@ -76,10 +104,13 @@ void sendBroadcast(int id, string message){
     gM->set_allocated_broadcast(globalResponse);
     binary;
     gM->SerializeToString(&binary);
-    //Add , send to everybody
-}
+    for (int i = 0; i < userList.size(); i++){
+        user temporalUser = getUser(i);
+        //Add , send to everybody
+    }
+}//Add , send to everybody
 
-void sendMessage(int id, string message){ 
+void sendMessage(int ids,int idr , string message){ 
     //Server response to sender 
     DirectMessageResponse * response(new DirectMessageResponse);
     response->set_messagestatus("Send");
@@ -91,7 +122,7 @@ void sendMessage(int id, string message){
     //server response to everybody
     DirectMessage * directMessage(new DirectMessage);
     directMessage->set_message(message);
-    directMessage->set_userid("id"); //fix proto should be int
+    directMessage->set_userid(0); //fix proto should be int
     ServerMessage * pm (new ServerMessage);
     pm->set_option(1); 
     pm->set_allocated_message(directMessage);
@@ -99,6 +130,23 @@ void sendMessage(int id, string message){
     pm->SerializeToString(&binary);
     //Add , send to user
 }
+
+
+void changeStatus(int id, string status){ 
+    //Server response to sender 
+    changeStatusInList(id, status);
+    //server response to everybody
+    ChangeStatusResponse * changeStatusResponse(new ChangeStatusResponse);
+    changeStatusResponse->set_status(status);
+    changeStatusResponse->set_userid(0); //fix proto should be int
+    ServerMessage * pm (new ServerMessage);
+    pm->set_option(7); 
+    pm->set_allocated_changestatusresponse(changeStatusResponse);
+    string binary;
+    pm->SerializeToString(&binary);
+    //Add , send to user
+}
+
 //Thread code
 void foo(user user, int id ) 
 {
@@ -119,17 +167,20 @@ void foo(user user, int id )
     int acknowledgement = 0;
     //waiting for acknowledgement
     while(acknowledgement == 0){
-        /*
+        
         if (!request.empty()){
             ClientMessage temp = request.front();
             request.pop();
-            if (temp.option() == ?") { //fix
-                acknowledgement = 1
+            if (temp.option() == 8) {
+                acknowledgement = 1 ;
             } else {
-                acknowledgement = -1 
+                acknowledgement = -1 ;
             }
-        }*/
-        acknowledgement = 1 ;//Remove later
+        }
+        //acknowledgement = 1 ;//Remove later
+    }
+    if (acknowledgement == -1) {
+        ;
     }
     //**Fix: Add condition for failed acknowledgement**
     printf("Acknowledgement was recive\n");
@@ -142,13 +193,16 @@ void foo(user user, int id )
             request.pop();
             switch (temp.option()) {
                 case 2: 
-                    //getConnectedUsers(temp.connectedusers);
+                    getConnectedUsers(temp.connectedusers());
                 break;
-                case 3: //status change :Pending
+                case 3: 
+                    changeStatus(user.userId, temp.changestatus().status());
                 break;
-                case 4: //sendBroadcast
+                case 4: 
+                    sendBroadcast(user.userId, temp.broadcast().message());
                 break;
-                case 5: //sendMessage
+                case 5: 
+                    sendMessage(user.userId, temp.directmessage().userid(),temp.broadcast().message());
                 break;
                 default:
                 ;
@@ -159,6 +213,7 @@ void foo(user user, int id )
 }
 
 int main (int argc, char **argv) {
+    //FIX user id cannot be 0
     GOOGLE_PROTOBUF_VERIFY_VERSION;
     //Message setup
     MyInfoSynchronize * miInfo(new MyInfoSynchronize);
@@ -177,7 +232,8 @@ int main (int argc, char **argv) {
     m2.ParseFromString(binaryList.front());
     binaryList.pop();
     //Fix: loop condition and add request list
-    //while (true){
+    //Fix: id not be 0
+    while (true){
         if (m2.option() == 0){ //Change to entering message
             printf("User created\n");
             //Lookup for username
@@ -193,9 +249,15 @@ int main (int argc, char **argv) {
             threadList.push_back(thread(foo, tempUser, threadCount));
             threadCount ++ ;
         } else {
-            //add message to corresponding pile
+            //Get position of user 
+            int pos = getUserPos(m2.userid());
+            //Add to user thread request queue
+            std::list<queue<ClientMessage>>::iterator it = requestList.begin();
+            std::advance(it, pos);
+            queue<ClientMessage> request = *it;
+            request.push(m2);
         }
-    //}
+    }
     //Wait for all created threads to end
     
     std::thread temp;
