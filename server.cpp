@@ -129,12 +129,12 @@ int getUserPos(int id){
 
 void changeStatusInList(int id, string status){
     user tempUser = userList[0];
-    int cont = 0;
      for (int i = 0; i < userIdList.size(); i++){
         if (userIdList[i] == id) {
-            tempUser = userList[cont];
+            cout << "Cambio " << id << "\n";
+            tempUser = userList[i];
             tempUser.status = status;
-            userList[cont] = tempUser;
+            userList[i] = tempUser;
         }
     }
 }
@@ -143,7 +143,6 @@ void getConnectedUsers(connectedUserRequest cur, int socket){
     ConnectedUserResponse * response(new ConnectedUserResponse);
     if (cur.userid() == 0){
         //All users
-        
         for (int i = 0; i < userList.size(); i++){
             ConnectedUser * tempConectedUser;
             tempConectedUser = response->add_connectedusers();
@@ -156,15 +155,17 @@ void getConnectedUsers(connectedUserRequest cur, int socket){
             tempConectedUser->set_ip(temporalUser.ip);
         }
     } else {
-        /*
+
         //Single user
         ConnectedUser * tempConectedUser;
         tempConectedUser = response->add_connectedusers();
-        user temporalUser = getUser(cur.userid()); 
+
+        user temporalUser = getIdUsername(cur.username()); 
+
         tempConectedUser->set_userid(temporalUser.userId);
         tempConectedUser->set_username(temporalUser.username);
         tempConectedUser->set_status(temporalUser.status);
-        tempConectedUser->set_ip(temporalUser.ip);*/
+        tempConectedUser->set_ip(temporalUser.ip);
     }
     
     ServerMessage * m(new ServerMessage);
@@ -203,6 +204,7 @@ void sendBroadcast(int id, string message, int socket){ ///FIx broadcast
     BroadcastMessage * globalResponse(new BroadcastMessage);
     globalResponse->set_message(message);
     globalResponse->set_userid(id);
+    globalResponse->set_username(getUser(id).username);
     ServerMessage * gM(new ServerMessage);
     gM->set_option(1); 
     gM->set_allocated_broadcast(globalResponse);
@@ -215,7 +217,7 @@ void sendBroadcast(int id, string message, int socket){ ///FIx broadcast
     }
 }//Add , send to everybody
 
-void sendMessage(string username , string message, int socket){ 
+void sendMessage(string username, int myid , string message, int socket){ 
     //Server response to sender 
     DirectMessageResponse * response(new DirectMessageResponse);
     response->set_messagestatus("Send");
@@ -228,7 +230,8 @@ void sendMessage(string username , string message, int socket){
     //server response to person
     DirectMessage * directMessage(new DirectMessage);
     directMessage->set_message(message);
-    directMessage->set_userid(0); //fix proto should be int
+    directMessage->set_userid(myid); //fix proto should be int
+    directMessage->set_username(getUser(myid).username);
     ServerMessage * pm (new ServerMessage);
     pm->set_option(2); 
     pm->set_allocated_message(directMessage);
@@ -340,7 +343,7 @@ void foo(user user, int id )
                             cout << temp.directmessage().message() << "," << temp.directmessage().message().length() << "\n"; 
                             cout << temp.directmessage().username()  << "," << temp.directmessage().username().length()  << "\n";
                             cout << temp.directmessage().userid() << "\n";
-                            sendMessage(temp.directmessage().username(),temp.directmessage().message(), mySock);
+                            sendMessage(temp.directmessage().username(), id,temp.directmessage().message(), mySock);
                             printf("mandar privado \n");
                         break;
                         default:
