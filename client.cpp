@@ -320,6 +320,7 @@ void *getUserInfo (string username) {
 void *sendMessageToUser (string username, string message) {
     DirectMessageRequest *directMessage = new DirectMessageRequest();
     directMessage -> set_username (username);
+    directMessage -> set_userid (userId);
     directMessage -> set_message (message);
 
     ClientMessage clientMessage;
