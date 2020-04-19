@@ -71,20 +71,20 @@ void *listen (void *args) {
                 string message = serverMessage.broadcast().message();
                 int id = serverMessage.broadcast().userid();
 
-                cout << CYAN << "(" << id << "): " << RESET << GREEN << message << RESET << endl;
+                cout << BOLDCYAN << "(" << id << "): " << RESET << BOLDGREEN << message << RESET << endl;
                 break;
             }
             case 2: {
                 string message = serverMessage.message().message();
                 int id = serverMessage.message().userid();
 
-                cout << BLUE << "(" << id << " en privado):" << RESET << GREEN << message << RESET << endl;
+                cout << BOLDBLUE << "(" << id << " en privado): " << RESET << BOLDGREEN << message << RESET << endl;
                 break;
             }
             case 3: {
                 string error = serverMessage.error().errormessage();
 
-                cout << RED << "ERROR: " << error << RESET << endl;
+                cout << BOLDRED << "ERROR: " << error << RESET << endl;
                 break;
             }
             case 4: {
@@ -108,15 +108,15 @@ void *listen (void *args) {
                 break;
             }
             case 5: {
-                cout << BLUE << "Los usuarios conectados son: " << RESET << endl;
+                cout << BOLDBLUE << "Los usuarios conectados son: " << RESET << endl;
                 for (int i = 0; i < serverMessage.connecteduserresponse().connectedusers_size(); i++) {
                     ConnectedUser tmpUser = serverMessage.connecteduserresponse().connectedusers(i);
-                    cout << BLUE << "----------------------------------" << RESET << endl;
-                    cout << BLUE << "\tUSERNAME: " << tmpUser.username() << RESET << endl;
-                    cout << BLUE << "\tSTATUS: " << tmpUser.status() << RESET << endl;
-                    cout << BLUE << "\tUSER ID: " << tmpUser.userid() << RESET << endl;
-                    cout << BLUE << "\tIP: " << tmpUser.ip() << RESET << endl;
-                    cout << BLUE << "----------------------------------" << RESET << endl;
+                    cout << BOLDBLUE << "----------------------------------" << RESET << endl;
+                    cout << BOLDBLUE << "\tUSERNAME: " << tmpUser.username() << RESET << endl;
+                    cout << BOLDBLUE << "\tSTATUS: " << tmpUser.status() << RESET << endl;
+                    cout << BOLDBLUE << "\tUSER ID: " << tmpUser.userid() << RESET << endl;
+                    cout << BOLDBLUE << "\tIP: " << tmpUser.ip() << RESET << endl;
+                    cout << BOLDBLUE << "----------------------------------" << RESET << endl;
                 }
                 break;
             }
@@ -124,21 +124,21 @@ void *listen (void *args) {
                 int id = serverMessage.changestatusresponse().userid();
                 string status = serverMessage.changestatusresponse().status();
 
-                cout << YELLOW << "Estado nuevo: " << status << RESET << endl;
+                cout << BOLDYELLOW << "Estado nuevo: " << status << RESET << endl;
                 estadoActual = status;            
                 break;
             }
             case 7: {
                 string messageStatus = serverMessage.broadcastresponse().messagestatus();
 
-                cout << YELLOW << "Broadcast message: " << messageStatus << RESET << endl;
+                cout << BOLDYELLOW << "Broadcast message: " << messageStatus << RESET << endl;
                 askChangeStatus = false;
                 break;
             }
             case 8: {
                 string messageStatus = serverMessage.directmessageresponse().messagestatus();
 
-                cout << YELLOW << "Direct message: " << messageStatus << RESET << endl;
+                cout << BOLDYELLOW << "Direct message: " << messageStatus << RESET << endl;
                 break;
             }
             default:
@@ -228,13 +228,13 @@ int connectToServer (string nombre, string username, string ip, string puerto) {
     // Convert IPv4 and IPv6 addresses from text to binary form 
     if(inet_pton(AF_INET, newIP, &serv_addr.sin_addr)<=0)  
     { 
-        cout << RED << "\nInvalid address/ Address not supported \n" << RESET << endl;
+        cout << BOLDRED << "\nInvalid address/ Address not supported \n" << RESET << endl;
         return -1; 
     } 
    
     if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) 
     { 
-        cout << RED << "\nConnection Failed\n" << RESET << endl;
+        cout << BOLDRED << "\nConnection Failed\n" << RESET << endl;
         return -1; 
     }
 }
@@ -305,7 +305,7 @@ bool ifUsername (string word) {
 }
 
 void *getUserInfo (string username) {
-    cout << BLUE << "Obteniendo info de " << username << "..." << RESET << endl;
+    cout << BOLDBLUE << "Obteniendo info de " << username << "..." << RESET << endl;
     connectedUserRequest *userRequest = new connectedUserRequest();
     // userRequest.set_userid(0) // Hay que asignarle un valor para el usuario.
     userRequest -> set_username (username);
@@ -377,23 +377,23 @@ string getMessageFromPhrase (string phrase, string toErase) {
 }
 
 void *showInfo () {
-    cout << YELLOW << "---------------------------------- INFO ----------------------------------" << RESET << endl;
-    cout << GREEN << "Este es un chat creado para el curso de sistemas operativos." << RESET << endl;
-    cout << GREEN "Debes escribir un mensaje utilizando palabras clave para enviar los mensajes correctamente." << RESET << endl;
-    cout << GREEN "Las palabras clave estan encerradas en comillas simples ('')." << RESET << endl;
-    cout << GREEN "\t" << BOLDYELLOW << "'info'" << GREEN << ": para solicitar informacion de como usar el chat." << RESET << endl;
-    cout << GREEN "\t" << BOLDYELLOW << "'salir'" << GREEN << ": para desconectarse del chat." << RESET << endl;
-    cout << GREEN "\t" << BOLDYELLOW << "'usuarios'" << GREEN << ": obtener todos los usuarios conectados." << RESET << endl;
-    cout << GREEN "\t" << BOLDYELLOW << "<username>" << GREEN << ": al ingresar el username de un usuario conectado, puedes ver informacion de el. " << RESET << endl;
-    cout << GREEN "\t" << BOLDYELLOW << "<username> <mensaje>" << GREEN << ": para enviar el <mensaje> al usuario <username>. " << RESET << endl;
-    cout << GREEN "\t" << BOLDYELLOW << "'broadcast' <mensaje>" << GREEN << ": para enviar el <mensaje> a todos los usuarios conectados." << RESET << endl;
-    cout << GREEN "\t" << BOLDYELLOW << "'estado' <nuevo estado>" << GREEN << ": para cambiar tu estado actual a <nuevo estado>" << RESET << endl;
+    cout << BOLDYELLOW << "---------------------------------- INFO ----------------------------------" << RESET << endl;
+    cout << BOLDGREEN << "Este es un chat creado para el curso de sistemas operativos." << RESET << endl;
+    cout << BOLDGREEN "Debes escribir un mensaje utilizando palabras clave para enviar los mensajes correctamente." << RESET << endl;
+    cout << BOLDGREEN "Las palabras clave estan encerradas en comillas simples ('')." << RESET << endl;
+    cout << BOLDGREEN "\t" << BOLDYELLOW << "'info'" << BOLDGREEN << ": para solicitar informacion de como usar el chat." << RESET << endl;
+    cout << BOLDGREEN "\t" << BOLDYELLOW << "'salir'" << BOLDGREEN << ": para desconectarse del chat." << RESET << endl;
+    cout << BOLDGREEN "\t" << BOLDYELLOW << "'usuarios'" << BOLDGREEN << ": obtener todos los usuarios conectados." << RESET << endl;
+    cout << BOLDGREEN "\t" << BOLDYELLOW << "<username>" << BOLDGREEN << ": al ingresar el username de un usuario conectado, puedes ver informacion de el. " << RESET << endl;
+    cout << BOLDGREEN "\t" << BOLDYELLOW << "<username> <mensaje>" << BOLDGREEN << ": para enviar el <mensaje> al usuario <username>. " << RESET << endl;
+    cout << BOLDGREEN "\t" << BOLDYELLOW << "'broadcast' <mensaje>" << BOLDGREEN << ": para enviar el <mensaje> a todos los usuarios conectados." << RESET << endl;
+    cout << BOLDGREEN "\t" << BOLDYELLOW << "'estado' <nuevo estado>" << BOLDGREEN << ": para cambiar tu estado actual a <nuevo estado>" << RESET << endl;
 
-    cout << YELLOW << "-------------------------------------------------------------------------" << RESET << endl;
+    cout << BOLDYELLOW << "-------------------------------------------------------------------------" << RESET << endl;
 }
 
 int main (int argc, char **argv) {
-    GOOGLE_PROTOBUF_VERIFY_VERSION;
+        ;
 
     if (argc > 4) {
 
