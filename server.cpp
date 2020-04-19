@@ -347,6 +347,8 @@ void foo(user user, int id )
                         ;
                     //Error handling
             }
+            buffer[8192] = {0}; 
+            //Error handling
         }
     }
 }

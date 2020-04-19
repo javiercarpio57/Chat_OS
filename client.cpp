@@ -8,6 +8,7 @@
 # include <arpa/inet.h> 
 # include "mensaje.pb.h"
 # include <chrono>
+# include <stdlib.h>
 
 # define RESET   "\033[0m"
 # define BLACK   "\033[30m"      // Black 
@@ -68,16 +69,18 @@ void *listen (void *args) {
             switch (serverMessage.option()) {
             case 1: {
                 string message = serverMessage.broadcast().message();
+                string u = serverMessage.broadcast().username();
                 int id = serverMessage.broadcast().userid();
 
-                cout << BOLDCYAN << "(" << id << "): " << RESET << BOLDGREEN << message << RESET << endl;
+                cout << BOLDCYAN << "([" << id << "]) " << u << ": " << RESET << BOLDGREEN << message << RESET << endl;
                 break;
             }
             case 2: {
                 string message = serverMessage.message().message();
+                string u = serverMessage.message().username();
                 int id = serverMessage.message().userid();
 
-                cout << BOLDBLUE << "(" << id << " en privado): " << RESET << BOLDGREEN << message << RESET << endl;
+                cout << BOLDBLUE << "([" << id << "] " << u << " en privado): " << RESET << BOLDGREEN << message << RESET << endl;
                 break;
             }
             case 3: {
@@ -322,9 +325,9 @@ void *getUserInfo (string username) {
 
 void *sendMessageToUser (string username, string message) {
     DirectMessageRequest *directMessage = new DirectMessageRequest();
-    directMessage -> set_username (username);
-    directMessage -> set_userid (userId);
     directMessage -> set_message (message);
+    directMessage -> set_userid (userId);
+    directMessage -> set_username (username);
 
     ClientMessage clientMessage;
     clientMessage.set_option (5);
