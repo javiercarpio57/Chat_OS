@@ -194,7 +194,7 @@ void sendBroadcast(int id, string message, int socket){ ///FIx broadcast
     }
 }//Add , send to everybody
 
-void sendMessage(int ids,string username , string message, int socket){ 
+void sendMessage(string username , string message, int socket){ 
     //Server response to sender 
     DirectMessageResponse * response(new DirectMessageResponse);
     response->set_messagestatus("Send");
@@ -213,9 +213,10 @@ void sendMessage(int ids,string username , string message, int socket){
     pm->set_allocated_message(directMessage);
     binary = "";
     pm->SerializeToString(&binary);
-
+    
+    printf("DirectM: %s\n", username);
     user temporalUser = getIdUsername(username);
-    printf("%d\n", temporalUser.userId);
+    printf("DirectM: %d\n", temporalUser.userId);
     sendBySocket(binary, temporalUser.socket);
 }
 
@@ -307,7 +308,7 @@ void foo(user user, int id )
                             printf("broadcast \n");
                         break;
                         case 5: 
-                            sendMessage(user.userId, temp.directmessage().username(),temp.directmessage().message(), mySock);
+                            sendMessage(temp.directmessage().username(),temp.directmessage().message(), mySock);
                             printf("mandar privado \n");
                         break;
                         default:
