@@ -114,8 +114,9 @@ int getUserPos(int id){
 void changeStatusInList(int id, string status){
     user tempUser = userList[0];
     int cont = 0;
-    while (tempUser.userId != id) {
+    while (tempUser.userId != id && cont < userList.size()) {
         cont ++;
+        tempUser = userList[cont];
     }
     tempUser.status = status;
     //Sustitute value
@@ -207,17 +208,20 @@ void sendMessage(int ids,int idr , string message, int socket){
 
 void changeStatus(int id, string status, int socket){ 
     //Server response to sender 
+    printf("cambiando  estado \n" );
     changeStatusInList(id, status);
     //server response to everybody
+    printf("ya estado \n" );
     ChangeStatusResponse * changeStatusResponse(new ChangeStatusResponse);
-    changeStatusResponse->set_status(status);
+    changeStatusResponse->set_status("Hola");
     changeStatusResponse->set_userid(0);
+    
     ServerMessage * pm (new ServerMessage);
     pm->set_option(7); 
     pm->set_allocated_changestatusresponse(changeStatusResponse);
     string binary;
     pm->SerializeToString(&binary);
-    sendBySocket(binary, socket);
+    //sendBySocket(binary, socket);
     //Add , send to user
 }
 
@@ -248,11 +252,13 @@ void foo(user user, int id )
         if (!request.empty()){
             ClientMessage temp = request.front();
             request.pop();
+            requestList[id] = request;
             if (temp.option() == 6) {
                 acknowledgement = 1 ;
             } else {
                 acknowledgement = -1 ;
             }
+            
         }
         //acknowledgement = 1 ;//Remove later
     }
@@ -265,9 +271,11 @@ void foo(user user, int id )
     //waiting for request from user
     
     while(working == 0){
+        request = requestList[id];
         if (!request.empty()){
             ClientMessage temp = request.front();
             request.pop();
+            requestList[id] = request;
             switch (temp.option()) {
                 case 2: 
                    getConnectedUsers(temp.connectedusers(), mySock);
