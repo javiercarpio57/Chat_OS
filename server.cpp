@@ -244,7 +244,7 @@ void foo(user user, int id )
     m->SerializeToString(&binary);
     sendBySocket(binary, mySock);
     
-    printf("Response from server to client\n");
+    printf("%d :Response from server to client\n", id);
     
     //waiting for acknowledgement
     while(acknowledgement == 0){
