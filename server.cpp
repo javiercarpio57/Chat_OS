@@ -221,6 +221,7 @@ void changeStatus(int id, string status, int socket){
 //Thread code
 void foo(user user, int id ) 
 {
+    printf("Hola\n");
     int mySock = createSocket(user.ip);
     MyInfoResponse * response(new MyInfoResponse);
     response->set_userid(id);
@@ -288,41 +289,47 @@ void root() {
     ClientMessage m2;
     while (true){
         if (!binaryList.empty()){
+            //printf("server: %s\n", binaryList.front());
             m2.ParseFromString(binaryList.front());
             binaryList.pop();
-        
-            if (m2.option() == 0){ //Change to entering message
+            if (m2.option() == 1){ //Change to entering message
                 printf("User created\n");
                 //Lookup for username
+                
                 user tempUser ;
                 tempUser.username = m2.synchronize().username();
                 tempUser.ip = m2.synchronize().ip();
                 tempUser.userId = threadCount;
                 tempUser.status = "";
+                
                 threadIdList.push_back(threadCount);
                 userList.push_back(tempUser);
+                
                 queue<ClientMessage> tempQueue;
                 requestList.push_back(tempQueue);
+                
                 threadList.push_back(thread(foo, tempUser, threadCount));
                 threadCount ++ ;
+                printf("Thread added\n");
             } else {
                 //Get position of user 
+                /*
                 int pos = getUserPos(m2.userid());
                 //Add to user thread request queue
                 std::list<queue<ClientMessage>>::iterator it = requestList.begin();
                 std::advance(it, pos);
                 queue<ClientMessage> request = *it;
-                request.push(m2);
+                request.push(m2);*/
             }
         }
     }
     //Wait for all created threads to end
-    
+    /*
     std::thread temp;
     for (int i = 0; i< threadCount; i++){
         threadList.front().join();
         threadList.pop_front();
-    }
+    }*/
 }
 
 int main (int argc, char **argv) {
@@ -345,21 +352,23 @@ int main (int argc, char **argv) {
     struct sockaddr_in address;  
     char buffer[1024] = {0}; 
         
-
+    thread m (root); 
     sock = createSocket("Mi ip");
   
-    //std::thread main (root); 
-    
+    ClientMessage m2;
     while(true){
         valread = read(sock, buffer, 1024);
         if ((buffer[0] != '\0') && (valread != 0)) {
-            printf("%s", buffer);
-            //binaryList.push(buffer);
+            //printf("main: %s\n", buffer);
+            //m2.ParseFromString(buffer);
+            //printf("main: %d\n", binaryList.size());
+            binaryList.push(buffer);
+            //printf("main: %s\n", buffer);
             buffer[1024] = {0}; 
         }
     } 
 
-    //main.join(); 
+    m.join(); 
     google::protobuf::ShutdownProtobufLibrary();
 }
 
