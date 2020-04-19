@@ -273,30 +273,32 @@ void foo(user user, int id )
     //waiting for request from user
     
     while(working == 0){
-        request = requestList[id];
-        if (!request.empty()){
-            ClientMessage temp = request.front();
-            request.pop();
-            requestList[id] = request;
-            switch (temp.option()) {
-                case 2: 
-                   getConnectedUsers(temp.connectedusers(), mySock);
-                   printf("devolver usuarios \n");
-                break;
-                case 3: 
-                    changeStatus(user.userId, temp.changestatus().status(), mySock);
-                    printf("cambiar estado \n" );
-                break;
-                case 4: 
-                    sendBroadcast(user.userId, temp.broadcast().message(), mySock);
-                    printf("broadcast \n");
-                break;
-                case 5: 
-                    sendMessage(user.userId, temp.directmessage().userid(),temp.directmessage().message(), mySock);
-                    printf("mandar privado \n");
-                break;
-                default:
-                ;
+        ClientMessage temp;
+            valread = read(mySock, buffer, 1024);
+                if ((buffer[0] != '\0') && (valread != 0)) {
+                    //m2.ParseFromString(buffer);
+                    //printf("main: %d\n", binaryList.size());
+                    temp.ParseFromString(buffer);
+                    buffer[1024] = {0}; 
+                    switch (temp.option()) {
+                        case 2: 
+                        getConnectedUsers(temp.connectedusers(), mySock);
+                        printf("devolver usuarios \n");
+                        break;
+                        case 3: 
+                            changeStatus(user.userId, temp.changestatus().status(), mySock);
+                            printf("cambiar estado \n" );
+                        break;
+                        case 4: 
+                            sendBroadcast(user.userId, temp.broadcast().message(), mySock);
+                            printf("broadcast \n");
+                        break;
+                        case 5: 
+                            sendMessage(user.userId, temp.directmessage().userid(),temp.directmessage().message(), mySock);
+                            printf("mandar privado \n");
+                        break;
+                        default:
+                        ;
                     //Error handling
             }
         }
@@ -341,7 +343,7 @@ void thread2(){
 int main (int argc, char **argv) { 
     GOOGLE_PROTOBUF_VERIFY_VERSION;
     //start thread 2
-    thread t2 (thread2);
+    //thread t2 (thread2);
     printf("Ya se creo la thread\n") ;
     while(true){
         //Establish socket 
@@ -383,7 +385,7 @@ int main (int argc, char **argv) {
         printf("Thread added\n");
         google::protobuf::ShutdownProtobufLibrary();
     }
-    t2.join();
+    //t2.join();
 }
 
 
