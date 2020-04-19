@@ -271,15 +271,19 @@ void foo(user user, int id )
             switch (temp.option()) {
                 case 2: 
                    getConnectedUsers(temp.connectedusers(), mySock);
+                   printf("devolver usuarios \n");
                 break;
                 case 3: 
                     changeStatus(user.userId, temp.changestatus().status(), mySock);
+                    printf("cambiar estado \n" );
                 break;
                 case 4: 
                     sendBroadcast(user.userId, temp.broadcast().message(), mySock);
+                    printf("broadcast \n");
                 break;
                 case 5: 
                     sendMessage(user.userId, temp.directmessage().userid(),temp.broadcast().message(), mySock);
+                    printf("mandar privado \n");
                 break;
                 default:
                 ;
