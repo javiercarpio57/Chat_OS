@@ -234,6 +234,10 @@ void foo(user user, int id )
     queue<ClientMessage> request = requestList[id];
     
     int acknowledgement = 0;
+
+    int valread; 
+    char buffer[1024] = {0};
+    
     
     MyInfoResponse * response(new MyInfoResponse);
     response->set_userid(id);
@@ -245,20 +249,18 @@ void foo(user user, int id )
     sendBySocket(binary, mySock);
     
     printf("%d :Response from server to client\n", id);
-    
+    ClientMessage mr;
     //waiting for acknowledgement
     while(acknowledgement == 0){
-        request = requestList[id];
-        if (!request.empty()){
-            ClientMessage temp = request.front();
-            request.pop();
-            requestList[id] = request;
-            if (temp.option() == 6) {
+        valread = read(mySock, buffer, 1024);
+        if ((buffer[0] != '\0') && (valread != 0)) {
+            mr.ParseFromString(buffer);
+            buffer[1024] = {0}; 
+            if (mr.option() == 6) {
                 acknowledgement = 1 ;
             } else {
                 acknowledgement = -1 ;
             }
-            
         }
         //acknowledgement = 1 ;//Remove later
     }
