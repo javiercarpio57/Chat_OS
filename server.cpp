@@ -179,6 +179,7 @@ void sendBroadcast(int id, string message, int socket){ ///FIx broadcast
     gM->SerializeToString(&binary);
     for (int i = 0; i < userList.size(); i++){
         user temporalUser = getUser(i);
+        printf("%d\n", temporalUser.userId);
         sendBySocket(binary, temporalUser.socket);
     }
 }//Add , send to everybody
