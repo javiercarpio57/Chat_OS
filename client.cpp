@@ -8,6 +8,7 @@
 # include <arpa/inet.h> 
 # include "mensaje.pb.h"
 # include <chrono>
+# include <stdlib.h>
 
 # define RESET   "\033[0m"
 # define BLACK   "\033[30m"      // Black 
@@ -60,25 +61,26 @@ void *listen (void *args) {
 
     while (isAlive) {
         char buffer[1024] = {0}; 
-        valread = read(sock, buffer, 1024);
+        valread = read(sock, buffer, 8192);
         if ((buffer[0] != '\0') && (valread != 0)) {
             ServerMessage serverMessage;
-
             serverMessage.ParseFromString (buffer);
 
             switch (serverMessage.option()) {
             case 1: {
                 string message = serverMessage.broadcast().message();
+                string u = serverMessage.broadcast().username();
                 int id = serverMessage.broadcast().userid();
 
-                cout << BOLDCYAN << "(" << id << "): " << RESET << BOLDGREEN << message << RESET << endl;
+                cout << BOLDCYAN << "([" << id << "]) " << u << ": " << RESET << BOLDGREEN << message << RESET << endl;
                 break;
             }
             case 2: {
                 string message = serverMessage.message().message();
+                string u = serverMessage.message().username();
                 int id = serverMessage.message().userid();
 
-                cout << BOLDBLUE << "(" << id << " en privado): " << RESET << BOLDGREEN << message << RESET << endl;
+                cout << BOLDBLUE << "([" << id << "] " << u << " en privado): " << RESET << BOLDGREEN << message << RESET << endl;
                 break;
             }
             case 3: {
@@ -204,10 +206,10 @@ void *checkState(void *args) {
 }
 
 void *sendBySocket (string msg) {
-    char buffer[1024] = {0};
+    char buffer[msg.length() + 1];
     strcpy(buffer, msg.c_str());
 
-    send (sock, buffer, msg.size() + 1, 0);
+    send (sock, buffer, msg.length() + 1, 0);
 }
 
 int connectToServer (string nombre, string username, string ip, string puerto) {
@@ -322,9 +324,9 @@ void *getUserInfo (string username) {
 
 void *sendMessageToUser (string username, string message) {
     DirectMessageRequest *directMessage = new DirectMessageRequest();
-    directMessage -> set_username (username);
-    directMessage -> set_userid (userId);
     directMessage -> set_message (message);
+    directMessage -> set_userid (userId);
+    directMessage -> set_username (username);
 
     ClientMessage clientMessage;
     clientMessage.set_option (5);
@@ -332,6 +334,10 @@ void *sendMessageToUser (string username, string message) {
 
     string msgToServer;
     clientMessage.SerializeToString (&msgToServer);
+
+    ClientMessage c;
+    c.ParseFromString(msgToServer);
+    cout << msgToServer.length() << " Envio a " << c.directmessage().username() << " un: " << c.directmessage().message() << endl;
 
     sendBySocket (msgToServer);
 }

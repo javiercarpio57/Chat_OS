@@ -81,6 +81,7 @@ message BroadcastResponse {
 message BroadcastMessage {
   required string message = 1;
   required int32 userId = 2;
+  optional string username = 3;
 }
 // --------------------------------------
 

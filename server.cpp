@@ -87,7 +87,9 @@ int createSocket () {
 void sendBySocket (string msg, int sock) {
     //mutex
     //configurar
-    char buffer[1024] = {0};
+    cout << "Largo: " << msg.length() << endl;
+
+    char buffer[msg.size() + 1];
     strcpy(buffer, msg.c_str());
 
     send(sock, buffer, msg.size() + 1, 0);
@@ -108,6 +110,7 @@ user getIdUsername(string username){
     int cont = 0;
     //printf("largo: %d\n", userList.size());
     for (int i = 0; i < userList.size(); i++){
+        cout << username << " = " << userList[i].username << " : " << username.compare(userList[i].username) << endl;
         if (username.compare(userList[i].username) == 0) {
             tempUser = userList[cont];
         }
@@ -143,10 +146,16 @@ void getConnectedUsers(connectedUserRequest cur, int socket){
     ConnectedUserResponse * response(new ConnectedUserResponse);
     if (cur.userid() == 0){
         //All users
-        ConnectedUser * tempConectedUser;
+
         for (int i = 0; i < userList.size(); i++){
             user temporalUser = getUser(i); 
-            tempConectedUser = response->add_connectedusers();
+
+            cout << temporalUser.userId << endl;
+            cout << temporalUser.username << endl;
+            // cout << temporalUser.status << endl;
+            cout << temporalUser.ip << endl;
+
+            ConnectedUser * tempConectedUser = response->add_connectedusers();
             tempConectedUser->set_userid(temporalUser.userId);
             tempConectedUser->set_username(temporalUser.username);
             tempConectedUser->set_status(temporalUser.status);
@@ -216,7 +225,7 @@ void sendMessage(string username , string message, int socket){
     binary = "";
     pm->SerializeToString(&binary);
     
-    printf("DirectM: %s\n", username);
+    cout << "DirectM: " << username << endl;
     user temporalUser = getIdUsername(username);
     printf("DirectM: %d\n", temporalUser.userId);
     sendBySocket(binary, temporalUser.socket);
@@ -251,7 +260,7 @@ void foo(user user, int id )
     int acknowledgement = 0;
 
     int valread; 
-    char buffer[1024] = {0};
+    char buffer[8142] = {0};
     
     
     MyInfoResponse * response(new MyInfoResponse);
@@ -268,10 +277,10 @@ void foo(user user, int id )
     ClientMessage mr;
     //waiting for acknowledgement
     while(acknowledgement == 0){
-        valread = read(mySock, buffer, 1024);
+        valread = read(mySock, buffer, 8192);
         if ((buffer[0] != '\0') && (valread != 0)) {
             mr.ParseFromString(buffer);
-            buffer[1024] = {0}; 
+            buffer[8192] = {0}; 
             if (mr.option() == 6) {
                 acknowledgement = 1 ;
             } else {
@@ -290,33 +299,37 @@ void foo(user user, int id )
     
     while(working == 0){
         ClientMessage temp;
-            valread = read(mySock, buffer, 1024);
-                if ((buffer[0] != '\0') && (valread != 0)) {
-                    //m2.ParseFromString(buffer);
-                    //printf("main: %d\n", binaryList.size());
-                    temp.ParseFromString(buffer);
-                    buffer[1024] = {0}; 
-                    switch (temp.option()) {
-                        case 2: 
-                        getConnectedUsers(temp.connectedusers(), mySock);
-                        printf("devolver usuarios \n");
-                        break;
-                        case 3: 
-                            changeStatus(user.userId, temp.changestatus().status(), mySock);
-                            printf("cambiar estado \n" );
-                        break;
-                        case 4: 
-                            sendBroadcast(user.userId, temp.broadcast().message(), mySock);
-                            printf("broadcast \n");
-                        break;
-                        case 5: 
-                            sendMessage(temp.directmessage().username(),temp.directmessage().message(), mySock);
-                            printf("mandar privado \n");
-                        break;
-                        default:
-                        ;
-                    //Error handling
+        valread = read(mySock, buffer, 8192);
+        if ((buffer[0] != '\0') && (valread != 0)) {
+            //m2.ParseFromString(buffer);
+            //printf("main: %d\n", binaryList.size());
+            temp.ParseFromString(buffer);
+            switch (temp.option()) {
+                case 2: 
+                getConnectedUsers(temp.connectedusers(), mySock);
+                printf("devolver usuarios \n");
+                break;
+                case 3: 
+                    changeStatus(user.userId, temp.changestatus().status(), mySock);
+                    printf("cambiar estado \n" );
+                break;
+                case 4: 
+                    sendBroadcast(user.userId, temp.broadcast().message(), mySock);
+                    printf("broadcast \n");
+                break;
+                case 5: {
+                    cout << " - " << temp.directmessage().userid() << endl;
+                    cout << " - " << temp.directmessage().username() << endl;
+                    cout << " - " << temp.directmessage().message() << endl;
+                    sendMessage(temp.directmessage().username(),temp.directmessage().message(), mySock);
+                    printf("mandar privado \n");
+                }
+                break;
+                default:
+                ;
             }
+            buffer[8192] = {0}; 
+            //Error handling
         }
     }
 }
@@ -324,7 +337,7 @@ void foo(user user, int id )
     
 void thread2(){
     int valread; 
-    char buffer[1024] = {0}; 
+    char buffer[8192] = {0}; 
     
     while(true){
         if (!userList.empty()) {
@@ -337,7 +350,7 @@ void thread2(){
                 tempUser = userList[i];
                 tempQueue= requestList[i];
                 //printf("main: %d\n", i);
-                valread = read(tempUser.socket, buffer, 1024);
+                valread = read(tempUser.socket, buffer, 8192);
                 if ((buffer[0] != '\0') && (valread != 0)) {
                     //m2.ParseFromString(buffer);
                     //printf("main: %d\n", binaryList.size());
@@ -349,7 +362,7 @@ void thread2(){
                     printf("main largo: %d\n", (int) tempQueue.size());
                     requestList[i] = tempQueue;
                     //printf("lo agregue");
-                    buffer[1024] = {0}; 
+                    buffer[8192] = {0}; 
                 }
             }
         }   
@@ -366,18 +379,18 @@ int main (int argc, char **argv) {
         int socket = createSocket();
         int flag = 1;
         int valread; 
-        char buffer[1024] = {0}; 
+        char buffer[8192] = {0}; 
         ClientMessage m;
 
         while(flag){
-            valread = read(socket, buffer, 1024);
+            valread = read(socket, buffer, 8192);
             if ((buffer[0] != '\0') && (valread != 0)) {
                 //printf("main: %s\n", buffer);
                 //m2.ParseFromString(buffer);
                 //printf("main: %d\n", binaryList.size());
                 m.ParseFromString(buffer);
                 //printf("main: %s\n", buffer);
-                buffer[1024] = {0}; 
+                buffer[8192] = {0}; 
                 flag = 0;
             }
         } 
