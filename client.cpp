@@ -71,7 +71,7 @@ void *listen (void *args) {
                 string message = serverMessage.broadcast().message();
                 int id = serverMessage.broadcast().userid();
 
-                cout << CYAN << "(" << id << "):" << RESET << GREEN << message << RESET << endl;
+                cout << CYAN << "(" << id << "): " << RESET << GREEN << message << RESET << endl;
                 break;
             }
             case 2: {
@@ -128,14 +128,14 @@ void *listen (void *args) {
             case 7: {
                 string messageStatus = serverMessage.broadcastresponse().messagestatus();
 
-                cout << YELLOW << messageStatus << RESET << endl;
+                cout << YELLOW << "Broadcast message: " << messageStatus << RESET << endl;
                 askChangeStatus = false;
                 break;
             }
             case 8: {
                 string messageStatus = serverMessage.directmessageresponse().messagestatus();
 
-                cout << YELLOW << messageStatus << RESET << endl;
+                cout << YELLOW << "Direct message: " << messageStatus << RESET << endl;
                 break;
             }
             default:
@@ -186,17 +186,17 @@ void *user (void *args) {
 
 void *checkState(void *args) {
     while (isAlive) {
-        if (hasConnected) {
-            if (seg < inactivoT) {
-                sleep (1);
-                seg++;
-            } else {
-                if ((estadoActual != "INACTIVO") && (!askChangeStatus)) {
-                    cambiarEstado("INACTIVO");
-                    askChangeStatus = true;
-                }
-            }
-        }
+        // if (hasConnected) {
+        //     if (seg < inactivoT) {
+        //         sleep (1);
+        //         seg++;
+        //     } else {
+        //         if ((estadoActual != "INACTIVO") && (!askChangeStatus)) {
+        //             cambiarEstado("INACTIVO");
+        //             askChangeStatus = true;
+        //         }
+        //     }
+        // }
     }
 }
 
