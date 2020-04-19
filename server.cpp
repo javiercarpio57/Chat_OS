@@ -34,7 +34,6 @@ list <thread> threadList;
 list <int> threadIdList;
 vector <user> userList;
 vector <queue<ClientMessage>> requestList;
-queue<string> binaryList;
 
 int threadCount = 0;
 
@@ -93,41 +92,34 @@ void sendBySocket (string msg, int sock) {
 
     send(sock, buffer, msg.size() + 1, 0);
 }
-/*
+
 user getUser(int id){
-    std::list<user>::iterator it = userList.begin();
-    user tempUser = *it;
+    user tempUser = userList[0];
+    int cont = 0;
     while (tempUser.userId != id) {
-        std::advance(it, 1);
-        tempUser = *it;
+        cont ++;
     }
-    return *it;
+    return tempUser;
 }
 
 int getUserPos(int id){
-    std::list<user>::iterator it = userList.begin();
-    user tempUser = *it;
+    user tempUser = userList[0];
     int cont = 0;
     while (tempUser.userId != id) {
-        std::advance(it, 1);
-        tempUser = *it;
-        cont++;
+        cont ++;
     }
     return cont;
 }
 
 void changeStatusInList(int id, string status){
-    std::list<user>::iterator it = userList.begin();
-    user tempUser = *it;
+    user tempUser = userList[0];
     int cont = 0;
     while (tempUser.userId != id) {
-        std::advance(it, 1);
-        tempUser = *it;
+        cont ++;
     }
     tempUser.status = status;
     //Sustitute value
-    userList.erase(it);
-    userList.insert(it, tempUser);
+    userList[cont] = tempUser;
     //Ctrate message
     
 }
@@ -227,7 +219,7 @@ void changeStatus(int id, string status, int socket){
     pm->SerializeToString(&binary);
     sendBySocket(binary, socket);
     //Add , send to user
-}*/
+}
 
 //Thread code
 void foo(user user, int id ) 
@@ -256,7 +248,7 @@ void foo(user user, int id )
         if (!request.empty()){
             ClientMessage temp = request.front();
             request.pop();
-            if (temp.option() == 8) {
+            if (temp.option() == 6) {
                 acknowledgement = 1 ;
             } else {
                 acknowledgement = -1 ;
@@ -278,16 +270,16 @@ void foo(user user, int id )
             request.pop();
             switch (temp.option()) {
                 case 2: 
-                   //getConnectedUsers(temp.connectedusers(), mySock);
+                   getConnectedUsers(temp.connectedusers(), mySock);
                 break;
                 case 3: 
-                    //changeStatus(user.userId, temp.changestatus().status(), mySock);
+                    changeStatus(user.userId, temp.changestatus().status(), mySock);
                 break;
                 case 4: 
-                    //sendBroadcast(user.userId, temp.broadcast().message(), mySock);
+                    sendBroadcast(user.userId, temp.broadcast().message(), mySock);
                 break;
                 case 5: 
-                    //sendMessage(user.userId, temp.directmessage().userid(),temp.broadcast().message(), mySock);
+                    sendMessage(user.userId, temp.directmessage().userid(),temp.broadcast().message(), mySock);
                 break;
                 default:
                 ;
@@ -403,12 +395,15 @@ void thread2(){
                 
                 valread = read(tempUser.socket, buffer, 1024);
                 if ((buffer[0] != '\0') && (valread != 0)) {
-                    
-                    printf("main: %s\n", buffer);
                     //m2.ParseFromString(buffer);
                     //printf("main: %d\n", binaryList.size());
                     m.ParseFromString(buffer);
+                    printf("main: %d\n", m.option());
+                    
+                    //printf("main: %d\n", binaryList.size());
                     tempQueue.push(m);
+                    printf("main largo: %d\n", (int) tempQueue.size());
+                    requestList[i] = tempQueue;
                     //printf("lo agregue");
                     buffer[1024] = {0}; 
                 }
