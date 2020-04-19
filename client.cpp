@@ -61,7 +61,7 @@ void *listen (void *args) {
 
     while (isAlive) {
         char buffer[1024] = {0}; 
-        valread = read(sock, buffer, 8192);
+        valread = read(sock, buffer, 8096);
         if ((buffer[0] != '\0') && (valread != 0)) {
             ServerMessage serverMessage;
             serverMessage.ParseFromString (buffer);
@@ -206,10 +206,11 @@ void *checkState(void *args) {
 }
 
 void *sendBySocket (string msg) {
-    char buffer[msg.length() + 1];
+    char buffer[msg.size() + 1] = {0};
     strcpy(buffer, msg.c_str());
 
-    send (sock, buffer, msg.length() + 1, 0);
+    int bytesSen = send (sock, buffer, msg.size() + 1, 0);
+    cout << bytesSen << ":" << msg.size() << ":" << (sizeof(buffer)/sizeof(*buffer)) << "\n";
 }
 
 int connectToServer (string nombre, string username, string ip, string puerto) {
@@ -334,11 +335,7 @@ void *sendMessageToUser (string username, string message) {
 
     string msgToServer;
     clientMessage.SerializeToString (&msgToServer);
-
-    ClientMessage c;
-    c.ParseFromString(msgToServer);
-    cout << msgToServer.length() << " Envio a " << c.directmessage().username() << " un: " << c.directmessage().message() << endl;
-
+    cout << "Mande largo: " << msgToServer.size();
     sendBySocket (msgToServer);
 }
 
