@@ -403,9 +403,10 @@ void thread2(){
             ClientMessage m;
             int l = userList.size();
             for (int i = 0; i < l; i++){
+
                 tempUser = userList[i];
                 tempQueue= requestList[i];
-                
+                //printf("main: %d\n", i);
                 valread = read(tempUser.socket, buffer, 1024);
                 if ((buffer[0] != '\0') && (valread != 0)) {
                     //m2.ParseFromString(buffer);
