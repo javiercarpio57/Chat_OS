@@ -188,7 +188,7 @@ void sendMessage(int ids,int idr , string message, int socket){
     DirectMessageResponse * response(new DirectMessageResponse);
     response->set_messagestatus("Send");
     ServerMessage * m(new ServerMessage);
-    m->set_option(7); 
+    m->set_option(8); 
     m->set_allocated_directmessageresponse(response);
     string binary;
     m->SerializeToString(&binary);
@@ -198,7 +198,7 @@ void sendMessage(int ids,int idr , string message, int socket){
     directMessage->set_message(message);
     directMessage->set_userid(0); //fix proto should be int
     ServerMessage * pm (new ServerMessage);
-    pm->set_option(1); 
+    pm->set_option(2); 
     pm->set_allocated_message(directMessage);
     binary = "";
     pm->SerializeToString(&binary);
