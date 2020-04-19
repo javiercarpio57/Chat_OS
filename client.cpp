@@ -60,10 +60,9 @@ void *listen (void *args) {
 
     while (isAlive) {
         char buffer[1024] = {0}; 
-        valread = read(sock, buffer, 1024);
+        valread = read(sock, buffer, 8096);
         if ((buffer[0] != '\0') && (valread != 0)) {
             ServerMessage serverMessage;
-
             serverMessage.ParseFromString (buffer);
 
             switch (serverMessage.option()) {
@@ -108,10 +107,13 @@ void *listen (void *args) {
                 break;
             }
             case 5: {
+                string prueba = buffer;
                 cout << BLUE << "Los usuarios conectados son: " << RESET << endl;
+                cout << BLUE << "Se recibieron : "  << serverMessage.connecteduserresponse().connectedusers_size() << RESET << endl;
+                cout << BLUE << "Largo recibieron : " << prueba.size() << "\n";
                 for (int i = 0; i < serverMessage.connecteduserresponse().connectedusers_size(); i++) {
                     ConnectedUser tmpUser = serverMessage.connecteduserresponse().connectedusers(i);
-                    cout << BLUE << "----------------------------------" << RESET << endl;
+                    cout << BLUE << "--------Se recibieron--------------------------" << RESET << endl;
                     cout << BLUE << "\tUSERNAME: " << tmpUser.username() << RESET << endl;
                     cout << BLUE << "\tSTATUS: " << tmpUser.status() << RESET << endl;
                     cout << BLUE << "\tUSER ID: " << tmpUser.userid() << RESET << endl;
@@ -204,10 +206,11 @@ void *checkState(void *args) {
 }
 
 void *sendBySocket (string msg) {
-    char buffer[1024] = {0};
+    char buffer[msg.size() + 1] = {0};
     strcpy(buffer, msg.c_str());
 
-    send (sock, buffer, msg.size() + 1, 0);
+    int bytesSen = send (sock, buffer, msg.size() + 1, 0);
+    cout << bytesSen << ":" << msg.size() << ":" << (sizeof(buffer)/sizeof(*buffer)) << "\n";
 }
 
 int connectToServer (string nombre, string username, string ip, string puerto) {
@@ -332,7 +335,7 @@ void *sendMessageToUser (string username, string message) {
 
     string msgToServer;
     clientMessage.SerializeToString (&msgToServer);
-
+    cout << "Mande largo: " << msgToServer.size();
     sendBySocket (msgToServer);
 }
 
