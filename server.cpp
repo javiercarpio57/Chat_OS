@@ -103,6 +103,16 @@ user getUser(int id){
     return tempUser;
 }
 
+user getIdUsername(string username){
+    user tempUser = userList[0];
+    int cont = 0;
+    while (tempUser.username != username) {
+        cont ++;
+        tempUser = userList[cont];
+    }
+    return tempUser;
+}
+
 int getUserPos(int id){
     user tempUser = userList[0];
     int cont = 0;
@@ -184,7 +194,7 @@ void sendBroadcast(int id, string message, int socket){ ///FIx broadcast
     }
 }//Add , send to everybody
 
-void sendMessage(int ids,int idr , string message, int socket){ 
+void sendMessage(int ids,string username , string message, int socket){ 
     //Server response to sender 
     DirectMessageResponse * response(new DirectMessageResponse);
     response->set_messagestatus("Send");
@@ -204,7 +214,7 @@ void sendMessage(int ids,int idr , string message, int socket){
     binary = "";
     pm->SerializeToString(&binary);
 
-    user temporalUser = getUser(idr);
+    user temporalUser = getIdUsername(username);
     printf("%d\n", temporalUser.userId);
     sendBySocket(binary, temporalUser.socket);
 }
@@ -251,6 +261,7 @@ void foo(user user, int id )
     sendBySocket(binary, mySock);
     
     printf("%d :Response from server to client\n", id);
+    //printf("Prueba %d", getIdUsername(user.username).userId);
     ClientMessage mr;
     //waiting for acknowledgement
     while(acknowledgement == 0){
@@ -296,7 +307,7 @@ void foo(user user, int id )
                             printf("broadcast \n");
                         break;
                         case 5: 
-                            sendMessage(user.userId, temp.directmessage().userid(),temp.directmessage().message(), mySock);
+                            sendMessage(user.userId, temp.directmessage().username(),temp.directmessage().message(), mySock);
                             printf("mandar privado \n");
                         break;
                         default:
