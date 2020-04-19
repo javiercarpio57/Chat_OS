@@ -98,6 +98,7 @@ user getUser(int id){
     int cont = 0;
     while (tempUser.userId != id) {
         cont ++;
+        tempUser = userList[cont];
     }
     return tempUser;
 }
@@ -107,6 +108,7 @@ int getUserPos(int id){
     int cont = 0;
     while (tempUser.userId != id) {
         cont ++;
+        tempUser = userList[cont];
     }
     return cont;
 }
@@ -208,10 +210,8 @@ void sendMessage(int ids,int idr , string message, int socket){
 
 void changeStatus(int id, string status, int socket){ 
     //Server response to sender 
-    printf("cambiando  estado \n" );
     changeStatusInList(id, status);
     //server response to everybody
-    printf("ya estado \n" );
     ChangeStatusResponse * changeStatusResponse(new ChangeStatusResponse);
     changeStatusResponse->set_status("Hola");
     changeStatusResponse->set_userid(0);
