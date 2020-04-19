@@ -215,9 +215,9 @@ void sendMessage(string username , string message, int socket){
     pm->SerializeToString(&binary);
     
     printf("DirectM: %s\n", username);
-    user temporalUser = getIdUsername(username);
-    printf("DirectM: %d\n", temporalUser.userId);
-    sendBySocket(binary, temporalUser.socket);
+    //user temporalUser = getIdUsername(username);
+    //printf("DirectM: %d\n", temporalUser.userId);
+    //sendBySocket(binary, temporalUser.socket);
 }
 
 
