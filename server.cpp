@@ -151,7 +151,7 @@ void getConnectedUsers(connectedUserRequest cur, int socket){
         tempConectedUser->set_ip(temporalUser.ip);
     }
     ServerMessage * m(new ServerMessage);
-    m->set_option(7); 
+    m->set_option(5); 
     m->set_allocated_connecteduserresponse(response);
     string binary;
     m->SerializeToString(&binary);
