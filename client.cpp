@@ -89,6 +89,7 @@ void *listen (void *args) {
             }
             case 4: {
                 userId = serverMessage.myinforesponse().userid();
+                cout << "User id: " << userId << endl;
 
                 MyInfoAcknowledge *myInfoAcknowledge = new MyInfoAcknowledge;
                 myInfoAcknowledge -> set_userid(userId);
@@ -100,6 +101,8 @@ void *listen (void *args) {
                 string msgToServer;
                 clientMessage.SerializeToString (&msgToServer);
                 sendBySocket (msgToServer);
+
+                cout << "Envio Acknowledge" << endl;
 
                 hasConnected = true;
                 break;
