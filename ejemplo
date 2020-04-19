@@ -1,0 +1,27 @@
+
+User users[];
+Request requests[];
+
+Thread 1:
+    while (true):
+        socket = createSocket()
+        read(socket...)
+        new usuario -> socket
+
+        users.add(usuario)
+
+
+Thread 2:
+    while (true):
+        for socket in users.socket:
+            if (buffer != null)
+                ..... responses
+                requests.add(request)
+
+
+Thread 3:
+    for request in requests:
+        resolve(request)
+
+
+
