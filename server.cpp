@@ -290,7 +290,7 @@ void foo(user user, int id )
                     printf("broadcast \n");
                 break;
                 case 5: 
-                    sendMessage(user.userId, temp.directmessage().userid(),temp.broadcast().message(), mySock);
+                    sendMessage(user.userId, temp.directmessage().userid(),temp.directmessage().message(), mySock);
                     printf("mandar privado \n");
                 break;
                 default:
