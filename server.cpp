@@ -204,6 +204,7 @@ void sendMessage(int ids,int idr , string message, int socket){
     pm->SerializeToString(&binary);
 
     user temporalUser = getUser(idr);
+    printf("%d\n", temporalUser.userId);
     sendBySocket(binary, temporalUser.socket);
 }
 
@@ -373,7 +374,7 @@ int main (int argc, char **argv) {
         tempUser.status = "";
         tempUser.socket = socket;
 
-        threadIdList.push_back(tempUser.userId);
+        //threadIdList.push_back(tempUser.userId);
         userList.push_back(tempUser);
         printf("User created\n");
 
