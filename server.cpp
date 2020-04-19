@@ -106,10 +106,11 @@ user getUser(int id){
 user getIdUsername(string username){
     user tempUser = userList[0];
     int cont = 0;
-    while (tempUser.username != username) {
-        printf("No es el: %d", cont++);
-        cont ++;
-        tempUser = userList[cont];
+    //printf("largo: %d\n", userList.size());
+    for (int i = 0; i < userList.size(); i++){
+        if (username.compare(userList[i].username) == 0) {
+            tempUser = userList[cont];
+        }
     }
     return tempUser;
 }
