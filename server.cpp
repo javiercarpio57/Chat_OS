@@ -234,14 +234,10 @@ void sendMessage(string username , string message, int socket){
     pm->set_allocated_message(directMessage);
     binary = "";
     pm->SerializeToString(&binary);
-    //user temporalUser = getIdUsername(username);
-    //printf("%d\n", temporalUser.userId);
-    //sendBySocket(binary, temporalUser.socket);
-    for (int i = 0; i < userList.size(); i++){
-        user temporalUser = userList[i];
-        printf("%d\n", temporalUser.userId);
-        sendBySocket(binary, temporalUser.socket);
-    }
+    user temporalUser = getIdUsername(username);
+    printf("%d\n", temporalUser.userId);
+    sendBySocket(binary, temporalUser.socket);
+
 }
 
 
