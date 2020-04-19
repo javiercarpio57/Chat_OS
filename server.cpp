@@ -207,7 +207,7 @@ void sendMessage(int ids,int idr , string message, int socket){
     pm->set_allocated_message(directMessage);
     binary = "";
     pm->SerializeToString(&binary);
-    
+
     user temporalUser = getUser(idr);
     sendBySocket(binary, temporalUser.socket);
 }
@@ -394,12 +394,11 @@ void thread2(){
     int flag = 1;
     int valread; 
     char buffer[1024] = {0}; 
-
     while(true){
         std::list<user>::iterator it = userList.begin();
         user tempUser = *it;
         std::list <queue<ClientMessage>>::iterator it2 = requestList.begin();
-        queue tempQueue= *it2;
+        queue<ClientMessage> tempQueue= *it2;
         ClientMessage m;
         for (int i = 0; i < userList.size(); i++){
             valread = read(tempUser.socket, buffer, 1024);
