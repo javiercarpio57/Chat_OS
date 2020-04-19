@@ -232,18 +232,6 @@ void changeStatus(int id, string status, int socket){
 //Thread code
 void foo(user user, int id ) 
 {
-    /*
-    printf("Hola\n");
-    int mySock = createSocket();
-    MyInfoResponse * response(new MyInfoResponse);
-    response->set_userid(id);
-    ServerMessage * m(new ServerMessage);
-    m->set_option(5); 
-    m->set_allocated_myinforesponse(response);
-    string binary;
-    m->SerializeToString(&binary);
-    //Asign requestList
-    */
     int mySock = user.socket;
     //Get request list 
     std::list<queue<ClientMessage>>::iterator it = requestList.begin();
@@ -251,6 +239,16 @@ void foo(user user, int id )
     queue<ClientMessage> request = *it;
 
     int acknowledgement = 0;
+    
+    MyInfoResponse * response(new MyInfoResponse);
+    response->set_userid(id);
+    ServerMessage * m(new ServerMessage);
+    m->set_option(4); 
+    m->set_allocated_myinforesponse(response);
+    string binary;
+    m->SerializeToString(&binary);
+    sendBySocket(binary, mySock);
+    
     printf("Response from server to client\n");
     //waiting for acknowledgement
     while(acknowledgement == 0){
@@ -267,7 +265,7 @@ void foo(user user, int id )
         //acknowledgement = 1 ;//Remove later
     }
     if (acknowledgement == -1) {
-        ;
+        printf("Sali y falle\n");;
     }
     //**Fix: Add condition for failed acknowledgement**
     printf("Acknowledgement was recive\n");
@@ -408,7 +406,7 @@ void thread2(){
                 //printf("main: %d\n", binaryList.size());
                 m.ParseFromString(buffer);
                 tempQueue.push(m);
-                //printf("main: %s\n", buffer);
+                printf("lo agregue");
                 buffer[1024] = {0}; 
             }
             std::advance(it, 1);
@@ -422,7 +420,7 @@ void thread2(){
 int main (int argc, char **argv) { 
     GOOGLE_PROTOBUF_VERIFY_VERSION;
     //start thread 2
-    std::thread t2 (thread2); 
+    //std::thread t2 (thread2); 
     while(true){
         //Establish socket 
         int socket = createSocket();
@@ -463,7 +461,7 @@ int main (int argc, char **argv) {
         printf("Thread added\n");
         google::protobuf::ShutdownProtobufLibrary();
     }
-    t2.join();
+    //t2.join();
 }
 
 
