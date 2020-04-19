@@ -104,16 +104,13 @@ user getUser(int id){
 }
 
 user getIdUsername(string username){
-    printf("largo: %d", userList.size());
-    printf("Llegue");
     user tempUser = userList[0];
-    /*
-    printf("Te equivocaste");
     int cont = 0;
     while (tempUser.username != username) {
+        printf("No es el: %d", cont++);
         cont ++;
         tempUser = userList[cont];
-    }*/
+    }
     return tempUser;
 }
 
