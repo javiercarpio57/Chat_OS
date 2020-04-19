@@ -401,7 +401,8 @@ void thread2(){
             user tempUser;
             queue<ClientMessage> tempQueue;
             ClientMessage m;
-            for (int i = 0; i < userList.size(); i++){
+            int l = userList.size();
+            for (int i = 0; i < l; i++){
                 tempUser = userList[i];
                 tempQueue= requestList[i];
                 
