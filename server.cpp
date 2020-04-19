@@ -25,6 +25,7 @@ struct user {
    string ip;
    int userId;
    string status;
+   int socket;
 };
 
 
@@ -37,7 +38,7 @@ queue<string> binaryList;
 
 int threadCount = 0;
 
-int createSocket (string ip) {
+int createSocket () {
     int server_fd, new_socket, valread; 
     struct sockaddr_in address; 
     int opt = 1; 
@@ -144,7 +145,6 @@ void getConnectedUsers(connectedUserRequest cur, int socket){
             tempConectedUser->set_status(temporalUser.status);
             tempConectedUser->set_ip(temporalUser.ip);
         }
-       // sendBySocket();
     } else {
         //Single user
         ConnectedUser * tempConectedUser;
@@ -154,10 +154,16 @@ void getConnectedUsers(connectedUserRequest cur, int socket){
         tempConectedUser->set_username(temporalUser.username);
         tempConectedUser->set_status(temporalUser.status);
         tempConectedUser->set_ip(temporalUser.ip);
-        // sendBySocket();
     }
+    ServerMessage * m(new ServerMessage);
+    m->set_option(7); 
+    m->set_allocated_connecteduserresponse(response);
+    string binary;
+    m->SerializeToString(&binary);
+    sendBySocket(binary, socket);
 }
-void sendBroadcast(int id, string message, int socket){
+
+void sendBroadcast(int id, string message, int socket){ ///FIx broadcast
     //Server response to sender 
     BroadcastResponse * response(new BroadcastResponse);
     response->set_messagestatus("Send");
@@ -166,6 +172,7 @@ void sendBroadcast(int id, string message, int socket){
     m->set_allocated_broadcastresponse(response);
     string binary;
     m->SerializeToString(&binary);
+    sendBySocket(binary, socket);
     //server response to everybody
     BroadcastMessage * globalResponse(new BroadcastMessage);
     globalResponse->set_message(message);
@@ -177,7 +184,7 @@ void sendBroadcast(int id, string message, int socket){
     gM->SerializeToString(&binary);
     for (int i = 0; i < userList.size(); i++){
         user temporalUser = getUser(i);
-        //Add , send to everybody
+        sendBySocket(binary, temporalUser.socket);
     }
 }//Add , send to everybody
 
@@ -190,7 +197,8 @@ void sendMessage(int ids,int idr , string message, int socket){
     m->set_allocated_directmessageresponse(response);
     string binary;
     m->SerializeToString(&binary);
-    //server response to everybody
+    sendBySocket(binary, socket);
+    //server response to person
     DirectMessage * directMessage(new DirectMessage);
     directMessage->set_message(message);
     directMessage->set_userid(0); //fix proto should be int
@@ -199,7 +207,9 @@ void sendMessage(int ids,int idr , string message, int socket){
     pm->set_allocated_message(directMessage);
     binary = "";
     pm->SerializeToString(&binary);
-    //Add , send to user
+    
+    user temporalUser = getUser(idr);
+    sendBySocket(binary, temporalUser.socket);
 }
 
 
@@ -209,20 +219,22 @@ void changeStatus(int id, string status, int socket){
     //server response to everybody
     ChangeStatusResponse * changeStatusResponse(new ChangeStatusResponse);
     changeStatusResponse->set_status(status);
-    changeStatusResponse->set_userid(0); //fix proto should be int
+    changeStatusResponse->set_userid(0);
     ServerMessage * pm (new ServerMessage);
     pm->set_option(7); 
     pm->set_allocated_changestatusresponse(changeStatusResponse);
     string binary;
     pm->SerializeToString(&binary);
+    sendBySocket(binary, socket);
     //Add , send to user
 }
 
 //Thread code
 void foo(user user, int id ) 
 {
+    /*
     printf("Hola\n");
-    int mySock = createSocket(user.ip);
+    int mySock = createSocket();
     MyInfoResponse * response(new MyInfoResponse);
     response->set_userid(id);
     ServerMessage * m(new ServerMessage);
@@ -230,14 +242,16 @@ void foo(user user, int id )
     m->set_allocated_myinforesponse(response);
     string binary;
     m->SerializeToString(&binary);
-    printf("Response from server to client\n");
     //Asign requestList
-    
+    */
+    int mySock = user.socket;
+    //Get request list 
     std::list<queue<ClientMessage>>::iterator it = requestList.begin();
     std::advance(it, id);
     queue<ClientMessage> request = *it;
 
     int acknowledgement = 0;
+    printf("Response from server to client\n");
     //waiting for acknowledgement
     while(acknowledgement == 0){
         
@@ -266,7 +280,7 @@ void foo(user user, int id )
             request.pop();
             switch (temp.option()) {
                 case 2: 
-                    getConnectedUsers(temp.connectedusers(), mySock);
+                   getConnectedUsers(temp.connectedusers(), mySock);
                 break;
                 case 3: 
                     changeStatus(user.userId, temp.changestatus().status(), mySock);
@@ -284,6 +298,7 @@ void foo(user user, int id )
         }
     }
 }
+/*
 void root() {
     // Message desynchronize
     ClientMessage m2;
@@ -319,7 +334,7 @@ void root() {
                 std::list<queue<ClientMessage>>::iterator it = requestList.begin();
                 std::advance(it, pos);
                 queue<ClientMessage> request = *it;
-                request.push(m2);*/
+                request.push(m2);
             }
         }
     }
@@ -329,10 +344,10 @@ void root() {
     for (int i = 0; i< threadCount; i++){
         threadList.front().join();
         threadList.pop_front();
-    }*/
+    }
 }
-
-int main (int argc, char **argv) {
+/*
+int main (int argc, char **argv) { 
     //FIX user id cannot be 0
     GOOGLE_PROTOBUF_VERIFY_VERSION;
     //Message setup
@@ -346,7 +361,7 @@ int main (int argc, char **argv) {
     string binary;
     m->SerializeToString(&binary);
     binaryList.push(binary);
-    */
+    
     
     int sock, valread; 
     struct sockaddr_in address;  
@@ -357,6 +372,7 @@ int main (int argc, char **argv) {
   
     ClientMessage m2;
     while(true){
+
         valread = read(sock, buffer, 1024);
         if ((buffer[0] != '\0') && (valread != 0)) {
             //printf("main: %s\n", buffer);
@@ -370,5 +386,85 @@ int main (int argc, char **argv) {
 
     m.join(); 
     google::protobuf::ShutdownProtobufLibrary();
+}*/
+
+//void thread1(){
+    
+void thread2(){
+    int flag = 1;
+    int valread; 
+    char buffer[1024] = {0}; 
+
+    while(true){
+        std::list<user>::iterator it = userList.begin();
+        user tempUser = *it;
+        std::list <queue<ClientMessage>>::iterator it2 = requestList.begin();
+        queue tempQueue= *it2;
+        ClientMessage m;
+        for (int i = 0; i < userList.size(); i++){
+            valread = read(tempUser.socket, buffer, 1024);
+            if ((buffer[0] != '\0') && (valread != 0)) {
+                //printf("main: %s\n", buffer);
+                //m2.ParseFromString(buffer);
+                //printf("main: %d\n", binaryList.size());
+                m.ParseFromString(buffer);
+                tempQueue.push(m);
+                //printf("main: %s\n", buffer);
+                buffer[1024] = {0}; 
+            }
+            std::advance(it, 1);
+            std::advance(it2, 1);
+            tempUser = *it;
+            tempQueue= *it2;
+        }   
+    } 
 }
+
+int main (int argc, char **argv) { 
+    GOOGLE_PROTOBUF_VERIFY_VERSION;
+    //start thread 2
+    std::thread t2 (thread2); 
+    while(true){
+        //Establish socket 
+        int socket = createSocket();
+        int flag = 1;
+        int valread; 
+        char buffer[1024] = {0}; 
+        ClientMessage m;
+
+        while(flag){
+            valread = read(socket, buffer, 1024);
+            if ((buffer[0] != '\0') && (valread != 0)) {
+                //printf("main: %s\n", buffer);
+                //m2.ParseFromString(buffer);
+                //printf("main: %d\n", binaryList.size());
+                m.ParseFromString(buffer);
+                //printf("main: %s\n", buffer);
+                buffer[1024] = {0}; 
+                flag = 0;
+            }
+        } 
+        
+        user tempUser ;
+        tempUser.username = m.synchronize().username();
+        tempUser.ip = m.synchronize().ip();
+        tempUser.userId = threadCount;
+        tempUser.status = "";
+        tempUser.socket = socket;
+
+        threadIdList.push_back(tempUser.userId);
+        userList.push_back(tempUser);
+        printf("User created\n");
+
+        queue<ClientMessage> tempQueue;
+        requestList.push_back(tempQueue);
+                
+        threadList.push_back(thread(foo, tempUser, threadCount));
+        threadCount ++ ;
+        printf("Thread added\n");
+        google::protobuf::ShutdownProtobufLibrary();
+    }
+    t2.join();
+}
+
 
