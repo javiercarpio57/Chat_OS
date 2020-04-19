@@ -5,7 +5,7 @@
 #include <thread> 
 #include <queue> 
 #include <list>
-
+#include <vector>
 #include <unistd.h> 
 #include <stdio.h> 
 #include <sys/socket.h> 
@@ -32,8 +32,8 @@ struct user {
 //int sock = 0;
 list <thread> threadList;
 list <int> threadIdList;
-list <user> userList;
-list <queue<ClientMessage>> requestList;
+vector <user> userList;
+vector <queue<ClientMessage>> requestList;
 queue<string> binaryList;
 
 int threadCount = 0;
@@ -93,7 +93,7 @@ void sendBySocket (string msg, int sock) {
 
     send(sock, buffer, msg.size() + 1, 0);
 }
-
+/*
 user getUser(int id){
     std::list<user>::iterator it = userList.begin();
     user tempUser = *it;
@@ -227,17 +227,16 @@ void changeStatus(int id, string status, int socket){
     pm->SerializeToString(&binary);
     sendBySocket(binary, socket);
     //Add , send to user
-}
+}*/
 
 //Thread code
 void foo(user user, int id ) 
 {
     int mySock = user.socket;
     //Get request list 
-    std::list<queue<ClientMessage>>::iterator it = requestList.begin();
-    std::advance(it, id);
-    queue<ClientMessage> request = *it;
-
+    
+    queue<ClientMessage> request = requestList[id];
+    
     int acknowledgement = 0;
     
     MyInfoResponse * response(new MyInfoResponse);
@@ -250,9 +249,10 @@ void foo(user user, int id )
     sendBySocket(binary, mySock);
     
     printf("Response from server to client\n");
+    
     //waiting for acknowledgement
     while(acknowledgement == 0){
-        
+        request = requestList[id];
         if (!request.empty()){
             ClientMessage temp = request.front();
             request.pop();
@@ -278,16 +278,16 @@ void foo(user user, int id )
             request.pop();
             switch (temp.option()) {
                 case 2: 
-                   getConnectedUsers(temp.connectedusers(), mySock);
+                   //getConnectedUsers(temp.connectedusers(), mySock);
                 break;
                 case 3: 
-                    changeStatus(user.userId, temp.changestatus().status(), mySock);
+                    //changeStatus(user.userId, temp.changestatus().status(), mySock);
                 break;
                 case 4: 
-                    sendBroadcast(user.userId, temp.broadcast().message(), mySock);
+                    //sendBroadcast(user.userId, temp.broadcast().message(), mySock);
                 break;
                 case 5: 
-                    sendMessage(user.userId, temp.directmessage().userid(),temp.broadcast().message(), mySock);
+                    //sendMessage(user.userId, temp.directmessage().userid(),temp.broadcast().message(), mySock);
                 break;
                 default:
                 ;
@@ -389,30 +389,30 @@ int main (int argc, char **argv) {
 //void thread1(){
     
 void thread2(){
-    int flag = 1;
     int valread; 
     char buffer[1024] = {0}; 
+    
     while(true){
-        std::list<user>::iterator it = userList.begin();
-        user tempUser = *it;
-        std::list <queue<ClientMessage>>::iterator it2 = requestList.begin();
-        queue<ClientMessage> tempQueue= *it2;
-        ClientMessage m;
-        for (int i = 0; i < userList.size(); i++){
-            valread = read(tempUser.socket, buffer, 1024);
-            if ((buffer[0] != '\0') && (valread != 0)) {
-                //printf("main: %s\n", buffer);
-                //m2.ParseFromString(buffer);
-                //printf("main: %d\n", binaryList.size());
-                m.ParseFromString(buffer);
-                tempQueue.push(m);
-                printf("lo agregue");
-                buffer[1024] = {0}; 
+        if (!userList.empty()) {
+            user tempUser;
+            queue<ClientMessage> tempQueue;
+            ClientMessage m;
+            for (int i = 0; i < userList.size(); i++){
+                tempUser = userList[i];
+                tempQueue= requestList[i];
+                
+                valread = read(tempUser.socket, buffer, 1024);
+                if ((buffer[0] != '\0') && (valread != 0)) {
+                    
+                    printf("main: %s\n", buffer);
+                    //m2.ParseFromString(buffer);
+                    //printf("main: %d\n", binaryList.size());
+                    m.ParseFromString(buffer);
+                    tempQueue.push(m);
+                    //printf("lo agregue");
+                    buffer[1024] = {0}; 
+                }
             }
-            std::advance(it, 1);
-            std::advance(it2, 1);
-            tempUser = *it;
-            tempQueue= *it2;
         }   
     } 
 }
@@ -420,7 +420,8 @@ void thread2(){
 int main (int argc, char **argv) { 
     GOOGLE_PROTOBUF_VERIFY_VERSION;
     //start thread 2
-    //std::thread t2 (thread2); 
+    thread t2 (thread2);
+    printf("Ya se creo la thread\n") ;
     while(true){
         //Establish socket 
         int socket = createSocket();
@@ -461,7 +462,7 @@ int main (int argc, char **argv) {
         printf("Thread added\n");
         google::protobuf::ShutdownProtobufLibrary();
     }
-    //t2.join();
+    t2.join();
 }
 
 
