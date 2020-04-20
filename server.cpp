@@ -310,48 +310,53 @@ void foo(user user, int id )
     
     while(working == 0){
         ClientMessage temp;
-            valread = read(mySock, buffer, 8096);
-                if ((buffer[0] != '\0') && (valread != 0)) {
-                    //m2.ParseFromString(buffer);
-                    //printf("main: %d\n", binaryList.size());
-                    temp.ParseFromString(buffer);
-                    string prueba = buffer;
-                    buffer[8096] = {0}; 
-                    switch (temp.option()) {
-                        
-                        case 2: 
-                            cout << temp.connectedusers().userid() << "\n"; 
-                            cout << temp.connectedusers().username() << "\n";
-                            getConnectedUsers(temp.connectedusers(), mySock);
-                            printf("devolver usuarios \n");
-                        break;
+        valread = read(mySock, buffer, 8096);
+        if (buffer[0] != '\0') {
+            if (valread != 0) {                
+                //m2.ParseFromString(buffer);
+                //printf("main: %d\n", binaryList.size());
+                temp.ParseFromString(buffer);
+                string prueba = buffer;
+                buffer[8096] = {0}; 
+                switch (temp.option()) {
+                    
+                    case 2: 
+                        cout << temp.connectedusers().userid() << "\n"; 
+                        cout << temp.connectedusers().username() << "\n";
+                        getConnectedUsers(temp.connectedusers(), mySock);
+                        printf("devolver usuarios \n");
+                    break;
 
-                        case 3: 
-                            changeStatus(user.userId, temp.changestatus().status(), mySock);
-                            printf("cambiar estado \n" );
-                        break;
-                        
-                        case 4: 
-                            cout << "Recibi largo: " << prueba.size() << "\n";
-                            cout << temp.broadcast().message() << "," << temp.directmessage().message().length() << "\n"; 
-                            sendBroadcast(user.userId, temp.broadcast().message(), mySock);
-                            printf("broadcast \n");
-                        break;
-                        
-                        case 5:
-                            cout << "Recibi largo: " << prueba.size() << "\n";
-                            cout << temp.directmessage().message() << "," << temp.directmessage().message().length() << "\n"; 
-                            cout << temp.directmessage().username()  << "," << temp.directmessage().username().length()  << "\n";
-                            cout << temp.directmessage().userid() << "\n";
-                            sendMessage(temp.directmessage().username(), id,temp.directmessage().message(), mySock);
-                            printf("mandar privado \n");
-                        break;
-                        default:
-                        ;
-                    //Error handling
+                    case 3: 
+                        changeStatus(user.userId, temp.changestatus().status(), mySock);
+                        printf("cambiar estado \n" );
+                    break;
+                    
+                    case 4: 
+                        cout << "Recibi largo: " << prueba.size() << "\n";
+                        cout << temp.broadcast().message() << "," << temp.directmessage().message().length() << "\n"; 
+                        sendBroadcast(user.userId, temp.broadcast().message(), mySock);
+                        printf("broadcast \n");
+                    break;
+                    
+                    case 5:
+                        cout << "Recibi largo: " << prueba.size() << "\n";
+                        cout << temp.directmessage().message() << "," << temp.directmessage().message().length() << "\n"; 
+                        cout << temp.directmessage().username()  << "," << temp.directmessage().username().length()  << "\n";
+                        cout << temp.directmessage().userid() << "\n";
+                        sendMessage(temp.directmessage().username(), id,temp.directmessage().message(), mySock);
+                        printf("mandar privado \n");
+                    break;
+                    default:
+                    ;
+                }
+            } else {
+                close (mySock);
+
+                break;
             }
-            buffer[8192] = {0}; 
-            //Error handling
+        buffer[8192] = {0}; 
+        //Error handling
         }
     }
 }
