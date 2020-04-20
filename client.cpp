@@ -74,8 +74,7 @@ void *listen (void *args) {
                     string u = serverMessage.broadcast().username();
                     int id = serverMessage.broadcast().userid();
 
-                    if (u == myUsername) u = "yo";
-                    cout << BOLDCYAN << "([" << id << "]) " << u << ": " << RESET << BOLDGREEN << message << RESET << endl;
+                    if (u != myUsername) cout << BOLDCYAN << "([" << id << "]) " << u << ": " << RESET << BOLDGREEN << message << RESET << endl;
                     break;
                 }
                 case 2: {
@@ -83,7 +82,7 @@ void *listen (void *args) {
                     string u = serverMessage.message().username();
                     int id = serverMessage.message().userid();
 
-                    cout << BOLDBLUE << "([" << id << "] " << u << " en privado): " << RESET << BOLDGREEN << message << RESET << endl;
+                    if (u != myUsername) cout << BOLDBLUE << "([" << id << "] " << u << " en privado): " << RESET << BOLDGREEN << message << RESET << endl;
                     break;
                 }
                 case 3: {
@@ -158,7 +157,6 @@ void *listen (void *args) {
 
                 exit();
             }
-            
         }
     }
 
