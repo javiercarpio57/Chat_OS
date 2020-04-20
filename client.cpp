@@ -152,7 +152,7 @@ void *listen (void *args) {
                     break;
                 }
             } else {
-                cout << BOLDRED << "\nEl servidor murio :(" << endl;
+                cout << BOLDRED << "\nDesconexion con el server :(" << endl;
                 exit();
             }
             
@@ -254,12 +254,6 @@ int connectToServer (string nombre, string username, string ip, string puerto) {
 // 0: Error. Ya existe el usuario u otro error.
 int sendInfoToServer(string nombre, string username, string ip, string puerto) {
     connectToServer (nombre, username, ip, puerto);
-    
-    // Aqui se pone el codigo para enviar al server.
-    // ConnectedUser miUsuario;
-    // miUsuario.set_username (username);
-    // miUsuario.set_status (estadoActual);
-    // miUsuario.set_ip (ip);
 
     // Enviar al servidor miUsuario.
     MyInfoSynchronize * myInfo(new MyInfoSynchronize);
