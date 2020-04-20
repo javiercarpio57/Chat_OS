@@ -104,7 +104,6 @@ user getUser(int id){
 user getIdUsername(string username){
     user tempUser = userList[0];
     int cont = 0;
-    //printf("largo: %d\n", userList.size());
     for (int i = 0; i < userList.size(); i++){
         string temp = userList[i].username;
         if (username.compare(temp) == 0) {
@@ -116,7 +115,6 @@ user getIdUsername(string username){
 
 int getUserPos(int id){
     int cont = 0;
-    cout << userIdList.size() << "\n";
     for (int i = 0; i < userIdList.size(); i++){
         if (userIdList[i] == id) {
             cont = i;
@@ -127,7 +125,6 @@ int getUserPos(int id){
 
 int checkUserName(string username){
     int cont = -1;
-    //printf("largo: %d\n", userList.size());
     for (int i = 0; i < userList.size(); i++){
         string temp = userList[i].username;
         if (username.compare(temp) == 0) {
@@ -139,7 +136,6 @@ int checkUserName(string username){
 
 int checkUserRepeated(string username){
     int cont = -1;
-    //printf("largo: %d\n", userList.size());
     for (int i = 0; i < userList.size(); i++){
         string temp = userList[i].username;
         if (username.compare(temp) == 0) {
@@ -168,7 +164,6 @@ void getConnectedUsers(connectedUserRequest cur, int socket){
         for (int i = 0; i < userList.size(); i++){
             ConnectedUser * tempConectedUser;
             tempConectedUser = response->add_connectedusers();
-            //cout << tempConectedUser << "," << i << "\n" ;
             user temporalUser = userList[i]; 
 
             tempConectedUser->set_userid(temporalUser.userId);
@@ -199,8 +194,6 @@ void getConnectedUsers(connectedUserRequest cur, int socket){
         string binary;
         m->SerializeToString(&binary);
         sendBySocket(binary, socket);
-        //cout << "el tamano es : "<< binary.length() << "\n";
-        //cout << "Se mandaron : "<<m->connecteduserresponse().connectedusers_size() << "usuarios" << "\n";
         ServerMessage temp;
         temp.ParseFromString(binary);
 
@@ -253,7 +246,7 @@ void sendBroadcast(int id, string message, int socket){ ///FIx broadcast
         sendBySocket(binary, temporalUser.socket);
     }
     printf("Broadcast was send\n");
-}//Add , send to everybody
+}
 
 void sendMessage(string username, int myid , string message, int socket){ 
     //Server response to sender
@@ -342,7 +335,6 @@ void foo(user user, int id )
     sendBySocket(binary, mySock);
     
     printf("%d :Response from server to client send\n", id);
-    //printf("Prueba %d", getIdUsername(user.username).userId);
     ClientMessage mr;
     //waiting for acknowledgement
     while(acknowledgement == 0){
@@ -378,16 +370,12 @@ void foo(user user, int id )
             valread = read(mySock, buffer, 8096);
             if (buffer[0] != '\0') {
                 if (valread != 0) {                
-                    //m2.ParseFromString(buffer);
-                    //printf("main: %d\n", binaryList.size());
                     temp.ParseFromString(buffer);
                     string prueba = buffer;
                     buffer[8096] = {0}; 
                     switch (temp.option()) {
                         
                         case 2: 
-                            cout << temp.connectedusers().userid() << "\n"; 
-                            cout << temp.connectedusers().username() << "\n";
                             getConnectedUsers(temp.connectedusers(), mySock);
                         break;
 
@@ -401,7 +389,7 @@ void foo(user user, int id )
                         
                         case 5:
                             sendMessage(temp.directmessage().username(), id,temp.directmessage().message(), mySock);
-                        break;                            printf("mandar privado \n");
+                        break;                            
                         default:
                         ;
                     }
@@ -472,11 +460,7 @@ int main (int argc, char **argv) {
         while(flag){
             valread = read(socket, buffer, 8096);
             if ((buffer[0] != '\0') && (valread != 0)) {
-                //printf("main: %s\n", buffer);
-                //m2.ParseFromString(buffer);
-                //printf("main: %d\n", binaryList.size());
                 m.ParseFromString(buffer);
-                //printf("main: %s\n", buffer);
                 buffer[8096] = {0}; 
                 flag = 0;
             }
