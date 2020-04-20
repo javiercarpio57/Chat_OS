@@ -34,7 +34,6 @@ list <thread> threadList;
 vector <int> userIdList;
 vector <user> userList;
 
-
 int threadCount = 0;
 
 int createSocket () {
@@ -89,7 +88,7 @@ void sendBySocket (string msg, int sock) {
     strcpy(buffer, msg.c_str());
     //Prueba
     int bytesSen = send (sock, buffer, msg.size() + 1, 0);
-    cout << bytesSen << ":" << msg.size() << ":" << (sizeof(buffer)/sizeof(*buffer)) << "\n";
+    //cout << bytesSen << ":" << msg.size() << ":" << (sizeof(buffer)/sizeof(*buffer)) << "\n";
 }
 
 
@@ -127,6 +126,30 @@ int getUserPos(int id){
     return cont;
 }
 
+int checkUserName(string username){
+    int cont = -1;
+    //printf("largo: %d\n", userList.size());
+    for (int i = 0; i < userList.size(); i++){
+        string temp = userList[i].username;
+        if (username.compare(temp) == 0) {
+            cont = 1;
+        }
+    }
+    return cont;
+}
+
+int checkUserRepeated(string username){
+    int cont = -1;
+    //printf("largo: %d\n", userList.size());
+    for (int i = 0; i < userList.size(); i++){
+        string temp = userList[i].username;
+        if (username.compare(temp) == 0) {
+            cont = cont + 1;
+        }
+    }
+    return cont;
+}
+
 void changeStatusInList(int id, string status){
     user tempUser = userList[0];
      for (int i = 0; i < userIdList.size(); i++){
@@ -141,6 +164,7 @@ void changeStatusInList(int id, string status){
 
 void getConnectedUsers(connectedUserRequest cur, int socket){
     ConnectedUserResponse * response(new ConnectedUserResponse);
+    int seguir = 1;
     if (cur.userid() == 0){
         //All users
         for (int i = 0; i < userList.size(); i++){
@@ -155,7 +179,11 @@ void getConnectedUsers(connectedUserRequest cur, int socket){
             tempConectedUser->set_ip(temporalUser.ip);
         }
     } else {
-
+        
+        if (checkUserName(cur.username()) == -1){
+            seguir = -1;
+            printf("Falle\n");
+        }
         //Single user
         ConnectedUser * tempConectedUser;
         tempConectedUser = response->add_connectedusers();
@@ -167,26 +195,39 @@ void getConnectedUsers(connectedUserRequest cur, int socket){
         tempConectedUser->set_status(temporalUser.status);
         tempConectedUser->set_ip(temporalUser.ip);
     }
-    
-    ServerMessage * m(new ServerMessage);
-    m->set_option(5); 
-    m->set_allocated_connecteduserresponse(response);
-    string binary;
-    m->SerializeToString(&binary);
-    sendBySocket(binary, socket);
-    //cout << "el tamano es : "<< binary.length() << "\n";
-    //cout << "Se mandaron : "<<m->connecteduserresponse().connectedusers_size() << "usuarios" << "\n";
-    ServerMessage temp;
-    temp.ParseFromString(binary);
+    if (seguir == 1) {
+        ServerMessage * m(new ServerMessage);
+        m->set_option(5); 
+        m->set_allocated_connecteduserresponse(response);
+        string binary;
+        m->SerializeToString(&binary);
+        sendBySocket(binary, socket);
+        //cout << "el tamano es : "<< binary.length() << "\n";
+        //cout << "Se mandaron : "<<m->connecteduserresponse().connectedusers_size() << "usuarios" << "\n";
+        ServerMessage temp;
+        temp.ParseFromString(binary);
 
-    cout << "Se mandaron : "<<temp.connecteduserresponse().connectedusers_size() << "usuarios" << "\n";
-    for (int i = 0; i < temp.connecteduserresponse().connectedusers_size(); i++) {
-        ConnectedUser tmpUser = temp.connecteduserresponse().connectedusers(i);
-        cout << "USERNAME: " << tmpUser.username() << endl;
-        cout << "STATUS: " << tmpUser.status() << endl;
-        cout << "USER ID: " << tmpUser.userid() << endl;
-        cout << "IP: " << tmpUser.ip() << endl;
-        cout << "----------------------------------" << endl;
+        cout << "Se mandaron : "<<temp.connecteduserresponse().connectedusers_size() << "usuarios" << "\n";
+        for (int i = 0; i < temp.connecteduserresponse().connectedusers_size(); i++) {
+            ConnectedUser tmpUser = temp.connecteduserresponse().connectedusers(i);
+            cout << "USERNAME: " << tmpUser.username() << endl;
+            cout << "STATUS: " << tmpUser.status() << endl;
+            cout << "USER ID: " << tmpUser.userid() << endl;
+            cout << "IP: " << tmpUser.ip() << endl;
+            cout << "----------------------------------" << endl;
+        }
+    } else {
+        //Error
+        printf("Non existing user requested\n");
+        ErrorResponse * response(new ErrorResponse);
+
+        response->set_errormessage("Non existing user requested");
+        ServerMessage * m(new ServerMessage);
+        m->set_option(3); 
+        m->set_allocated_error(response);
+        string binary;
+        m->SerializeToString(&binary);
+        sendBySocket(binary, socket);
     }
 }
 
@@ -218,29 +259,42 @@ void sendBroadcast(int id, string message, int socket){ ///FIx broadcast
 }//Add , send to everybody
 
 void sendMessage(string username, int myid , string message, int socket){ 
-    //Server response to sender 
-    DirectMessageResponse * response(new DirectMessageResponse);
-    response->set_messagestatus("Send");
-    ServerMessage * m(new ServerMessage);
-    m->set_option(8); 
-    m->set_allocated_directmessageresponse(response);
-    string binary;
-    m->SerializeToString(&binary);
-    sendBySocket(binary, socket);
-    //server response to person
-    DirectMessage * directMessage(new DirectMessage);
-    directMessage->set_message(message);
-    directMessage->set_userid(myid); //fix proto should be int
-    directMessage->set_username(getUser(myid).username);
-    ServerMessage * pm (new ServerMessage);
-    pm->set_option(2); 
-    pm->set_allocated_message(directMessage);
-    binary = "";
-    pm->SerializeToString(&binary);
-    user temporalUser = getIdUsername(username);
-    printf("%d\n", temporalUser.userId);
-    sendBySocket(binary, temporalUser.socket);
+    //Server response to sender
+    if (checkUserName(username) == -1){
+        //Error
+        printf("Message sended to non existing user \n");
+        ErrorResponse * response(new ErrorResponse);
 
+        response->set_errormessage("Message sended to non existing user ");
+        ServerMessage * m(new ServerMessage);
+        m->set_option(3); 
+        m->set_allocated_error(response);
+        string binary;
+        m->SerializeToString(&binary);
+        sendBySocket(binary, socket);
+    } else {
+        DirectMessageResponse * response(new DirectMessageResponse);
+        response->set_messagestatus("Send");
+        ServerMessage * m(new ServerMessage);
+        m->set_option(8); 
+        m->set_allocated_directmessageresponse(response);
+        string binary;
+        m->SerializeToString(&binary);
+        sendBySocket(binary, socket);
+        //server response to person
+        DirectMessage * directMessage(new DirectMessage);
+        directMessage->set_message(message);
+        directMessage->set_userid(myid); //fix proto should be int
+        directMessage->set_username(getUser(myid).username);
+        ServerMessage * pm (new ServerMessage);
+        pm->set_option(2); 
+        pm->set_allocated_message(directMessage);
+        binary = "";
+        pm->SerializeToString(&binary);
+        user temporalUser = getIdUsername(username);
+        printf("%d\n", temporalUser.userId);
+        sendBySocket(binary, temporalUser.socket);
+    }
 }
 
 void changeStatus(int id, string status, int socket){ 
@@ -269,6 +323,8 @@ int getPositionOfUser (user usuario) {
 //Thread code
 void foo(user user, int id ) 
 {
+    int errorFlag = 0;
+
     int mySock = user.socket;
     //Get request list 
     int mypos = getUserPos(id);
@@ -306,73 +362,107 @@ void foo(user user, int id )
         //acknowledgement = 1 ;//Remove later
     }
     if (acknowledgement == -1) {
-        printf("Sali y falle\n");;
+        errorFlag = 1;
     }
-    //**Fix: Add condition for failed acknowledgement**
+    int answer = checkUserRepeated(user.username);
+    
+    if (answer != 0 ) {
+        errorFlag = 2;
+    }
+    //Verificar si hay 2 con el mismo nombre
     printf("Acknowledgement was recive\n");
     int working = 0;
     //waiting for request from user
     
-    while(working == 0){
-        ClientMessage temp;
-        valread = read(mySock, buffer, 8096);
-        if (buffer[0] != '\0') {
-            if (valread != 0) {                
-                //m2.ParseFromString(buffer);
-                //printf("main: %d\n", binaryList.size());
-                temp.ParseFromString(buffer);
-                string prueba = buffer;
-                buffer[8096] = {0}; 
-                switch (temp.option()) {
-                    
-                    case 2: 
-                        cout << temp.connectedusers().userid() << "\n"; 
-                        cout << temp.connectedusers().username() << "\n";
-                        getConnectedUsers(temp.connectedusers(), mySock);
-                        printf("devolver usuarios \n");
-                    break;
+    if (errorFlag == 0){
+        while(working == 0){
+            ClientMessage temp;
+            valread = read(mySock, buffer, 8096);
+            if (buffer[0] != '\0') {
+                if (valread != 0) {                
+                    //m2.ParseFromString(buffer);
+                    //printf("main: %d\n", binaryList.size());
+                    temp.ParseFromString(buffer);
+                    string prueba = buffer;
+                    buffer[8096] = {0}; 
+                    switch (temp.option()) {
+                        
+                        case 2: 
+                            cout << temp.connectedusers().userid() << "\n"; 
+                            cout << temp.connectedusers().username() << "\n";
+                            getConnectedUsers(temp.connectedusers(), mySock);
+                            printf("devolver usuarios \n");
+                        break;
 
-                    case 3: 
-                        changeStatus(user.userId, temp.changestatus().status(), mySock);
-                        printf("cambiar estado \n" );
-                    break;
+                        case 3: 
+                            changeStatus(user.userId, temp.changestatus().status(), mySock);
+                            printf("cambiar estado \n" );
+                        break;
+                        
+                        case 4: 
+                            cout << "Recibi largo: " << prueba.size() << "\n";
+                            cout << temp.broadcast().message() << "," << temp.directmessage().message().length() << "\n"; 
+                            sendBroadcast(user.userId, temp.broadcast().message(), mySock);
+                            printf("broadcast \n");
+                        break;
+                        
+                        case 5:
+                            cout << "Recibi largo: " << prueba.size() << "\n";
+                            cout << temp.directmessage().message() << "," << temp.directmessage().message().length() << "\n"; 
+                            cout << temp.directmessage().username()  << "," << temp.directmessage().username().length()  << "\n";
+                            cout << temp.directmessage().userid() << "\n";
+                            sendMessage(temp.directmessage().username(), id,temp.directmessage().message(), mySock);
+                            printf("mandar privado \n");
+                        break;
+                        default:
+                        ;
+                    }
+                } else {
+                    close (mySock);
+                    cout << "Se desconecto: " << user.username << endl;
+
+                    userIdList[mypos] = userIdList.back();
+                    userIdList.pop_back();
+
+                    userList[mypos] = userList.back();
+                    userList.pop_back();
                     
-                    case 4: 
-                        cout << "Recibi largo: " << prueba.size() << "\n";
-                        cout << temp.broadcast().message() << "," << temp.directmessage().message().length() << "\n"; 
-                        sendBroadcast(user.userId, temp.broadcast().message(), mySock);
-                        printf("broadcast \n");
+                    working = 1; //Sali del while
                     break;
-                    
-                    case 5:
-                        cout << "Recibi largo: " << prueba.size() << "\n";
-                        cout << temp.directmessage().message() << "," << temp.directmessage().message().length() << "\n"; 
-                        cout << temp.directmessage().username()  << "," << temp.directmessage().username().length()  << "\n";
-                        cout << temp.directmessage().userid() << "\n";
-                        sendMessage(temp.directmessage().username(), id,temp.directmessage().message(), mySock);
-                        printf("mandar privado \n");
-                    break;
-                    default:
-                    ;
                 }
-            } else {
-                close (mySock);
-                cout << "Se desconecto: " << user.username << endl;
-                int pos = getPositionOfUser (user);
-
-                userIdList[pos] = userIdList.back();
-                userIdList.pop_back();
-
-                userList[pos] = userList.back();
-                userList.pop_back();
-                
-                working = 1; //Sali del while
-                break;
+            buffer[8192] = {0}; 
+            //Error handling
             }
-        buffer[8192] = {0}; 
-        //Error handling
         }
+    } else {
+        ErrorResponse * response(new ErrorResponse);
+        if (errorFlag == 1){
+            printf("Acknowledgement fail\n");
+
+            response->set_errormessage("Acknowledgement fail");
+        } else {
+            printf("Repeated user\n");
+
+            response->set_errormessage("Repeated user");            
+        }
+
+        ServerMessage * m(new ServerMessage);
+        m->set_option(3); 
+        m->set_allocated_error(response);
+        string binary;
+        m->SerializeToString(&binary);
+        sendBySocket(binary, mySock);
+
+        close (mySock);
+
+        cout << "Se desconecto: " << user.username << endl;
+        userIdList[mypos] = userIdList.back();
+        userIdList.pop_back();
+        userList[mypos] = userList.back();
+        userList.pop_back();
+
     }
+    //matar todo
 }
 
 int main (int argc, char **argv) { 
@@ -400,6 +490,7 @@ int main (int argc, char **argv) {
                 flag = 0;
             }
         } 
+
         threadCount ++ ;
         user tempUser ;
         tempUser.username = m.synchronize().username();
