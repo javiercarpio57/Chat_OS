@@ -33,6 +33,7 @@ struct user {
 list <thread> threadList;
 vector <int> userIdList;
 vector <user> userList;
+vector <string> names;
 
 int threadCount = 0;
 int PORT;
@@ -244,6 +245,7 @@ void sendBroadcast(int id, string message, int socket){ ///FIx broadcast
     for (int i = 0; i < userList.size(); i++){
         cout <<" Broadcast vuelta no. "<< i;
         user temporalUser = userList[i];
+        cout << "Enviando broadcast a: " << temporalUser.username << endl;
         sendBySocket(binary, temporalUser.socket);
     }
     printf("Broadcast was send\n");
@@ -396,8 +398,12 @@ void foo(user user, int id )
                         ;
                     }
                 } else {
+                                        
                     close (mySock);
-                    cout << "User disconnected: " << user.username << endl;
+                    cout << "Se desconecto: " << names[mypos] << endl;
+
+                    names[mypos] = names.back();
+                    names.pop_back();
 
                     userIdList[mypos] = userIdList.back();
                     userIdList.pop_back();
@@ -479,6 +485,7 @@ int main (int argc, char **argv) {
         //threadIdList.push_back(tempUser.userId);
         userIdList.push_back(tempUser.userId);
         userList.push_back(tempUser);
+        names.push_back(tempUser.username);
 
         printf("User created\n");
 
