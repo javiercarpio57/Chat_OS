@@ -243,7 +243,6 @@ void sendMessage(string username, int myid , string message, int socket){
 
 }
 
-
 void changeStatus(int id, string status, int socket){ 
     //Server response to sender 
     changeStatusInList(id, status);
@@ -258,6 +257,13 @@ void changeStatus(int id, string status, int socket){
     string binary;
     pm->SerializeToString(&binary);
     sendBySocket(binary, socket);
+}
+
+int getPositionOfUser (user usuario) {
+    for (int i = 0; i < userList.size(); i++)
+    {
+        if (userList[i].userId == usuario.userId) return i;
+    }
 }
 
 //Thread code
@@ -352,9 +358,13 @@ void foo(user user, int id )
             } else {
                 close (mySock);
                 cout << "Se desconecto: " << user.username << endl;
-                userIdList.erase (userIdList.begin()+mypos); //Elima el id de la lista
-                userList.erase (userIdList.begin()+mypos);//Elimina el usuario
-                threadList.erase (userIdList.begin()+mypos); //Elimina la thread
+                int pos = getPositionOfUser (user);
+
+                userIdList.erase (userIdList.begin() + pos); //Elima el id de la lista
+
+                userList[pos] = userList.back();
+                userList.pop_back();
+                
                 working = 1; //Sali del while
                 break;
             }
