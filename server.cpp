@@ -90,13 +90,23 @@ void sendBySocket (string msg, int sock) {
     int bytesSen = send (sock, buffer, msg.size() + 1, 0);
 }
 
-
+/*
 user getUser(int id){
     user tempUser = userList[0];
     int cont = 0;
     while (tempUser.userId != id) {
         cont ++;
         tempUser = userList[cont];
+    }
+    return tempUser;
+}*/
+
+user getUser(int id){
+    user tempUser = userList[0];
+    for (int i = 0; i < userIdList.size(); i++){
+        if (userIdList[i] == id) {
+            tempUser = userList[i];
+        }
     }
     return tempUser;
 }
