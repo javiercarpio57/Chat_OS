@@ -28,7 +28,7 @@
 # define BOLDCYAN    "\033[1m\033[36m"      // Bold Cyan 
 # define BOLDWHITE   "\033[1m\033[37m"      // Bold White 
 
-#define inactivoT 5
+#define inactivoT 20
 
 using namespace chat;
 using namespace std;
@@ -62,90 +62,100 @@ void *listen (void *args) {
     while (isAlive) {
         char buffer[1024] = {0}; 
         valread = read(sock, buffer, 8096);
-        if ((buffer[0] != '\0') && (valread != 0)) {
-            ServerMessage serverMessage;
-            serverMessage.ParseFromString (buffer);
+        if (buffer[0] != '\0') {
+            if (valread != 0) {
+                ServerMessage serverMessage;
+                serverMessage.ParseFromString (buffer);
 
-            switch (serverMessage.option()) {
-            case 1: {
-                string message = serverMessage.broadcast().message();
-                string u = serverMessage.broadcast().username();
-                int id = serverMessage.broadcast().userid();
+                switch (serverMessage.option()) {
+                case 1: {
+                    string message = serverMessage.broadcast().message();
+                    string u = serverMessage.broadcast().username();
+                    int id = serverMessage.broadcast().userid();
 
-                cout << BOLDCYAN << "([" << id << "]) " << u << ": " << RESET << BOLDGREEN << message << RESET << endl;
-                break;
-            }
-            case 2: {
-                string message = serverMessage.message().message();
-                string u = serverMessage.message().username();
-                int id = serverMessage.message().userid();
-
-                cout << BOLDBLUE << "([" << id << "] " << u << " en privado): " << RESET << BOLDGREEN << message << RESET << endl;
-                break;
-            }
-            case 3: {
-                string error = serverMessage.error().errormessage();
-
-                cout << BOLDRED << "ERROR: " << error << RESET << endl;
-                break;
-            }
-            case 4: {
-                userId = serverMessage.myinforesponse().userid();
-                cout << "User id: " << userId << endl;
-
-                MyInfoAcknowledge *myInfoAcknowledge = new MyInfoAcknowledge;
-                myInfoAcknowledge -> set_userid(userId);
-
-                ClientMessage clientMessage;
-                clientMessage.set_option (6);
-                clientMessage.set_allocated_acknowledge (myInfoAcknowledge);
-
-                string msgToServer;
-                clientMessage.SerializeToString (&msgToServer);
-                sendBySocket (msgToServer);
-
-                cout << "Envio Acknowledge" << endl;
-
-                hasConnected = true;
-                break;
-            }
-            case 5: {
-                cout << BOLDBLUE << "Los usuarios conectados son: " << RESET << endl;
-                for (int i = 0; i < serverMessage.connecteduserresponse().connectedusers_size(); i++) {
-                    ConnectedUser tmpUser = serverMessage.connecteduserresponse().connectedusers(i);
-                    cout << BOLDBLUE << "----------------------------------" << RESET << endl;
-                    cout << BOLDBLUE << "\tUSERNAME: " << tmpUser.username() << RESET << endl;
-                    cout << BOLDBLUE << "\tSTATUS: " << tmpUser.status() << RESET << endl;
-                    cout << BOLDBLUE << "\tUSER ID: " << tmpUser.userid() << RESET << endl;
-                    cout << BOLDBLUE << "\tIP: " << tmpUser.ip() << RESET << endl;
-                    cout << BOLDBLUE << "----------------------------------" << RESET << endl;
+                    cout << BOLDCYAN << "([" << id << "]) " << u << ": " << RESET << BOLDGREEN << message << RESET << endl;
+                    break;
                 }
-                break;
-            }
-            case 6: {
-                int id = serverMessage.changestatusresponse().userid();
-                string status = serverMessage.changestatusresponse().status();
+                case 2: {
+                    string message = serverMessage.message().message();
+                    string u = serverMessage.message().username();
+                    int id = serverMessage.message().userid();
 
-                cout << BOLDYELLOW << "Estado nuevo: " << status << RESET << endl;
-                estadoActual = status;            
-                break;
-            }
-            case 7: {
-                string messageStatus = serverMessage.broadcastresponse().messagestatus();
+                    cout << BOLDBLUE << "([" << id << "] " << u << " en privado): " << RESET << BOLDGREEN << message << RESET << endl;
+                    break;
+                }
+                case 3: {
+                    string error = serverMessage.error().errormessage();
 
-                cout << BOLDYELLOW << "Broadcast message: " << messageStatus << RESET << endl;
-                askChangeStatus = false;
-                break;
-            }
-            case 8: {
-                string messageStatus = serverMessage.directmessageresponse().messagestatus();
+                    cout << BOLDRED << "ERROR: " << error << RESET << endl;
+                    break;
+                }
+                case 4: {
+                    userId = serverMessage.myinforesponse().userid();
 
-                cout << BOLDYELLOW << "Direct message: " << messageStatus << RESET << endl;
-                break;
+                    MyInfoAcknowledge *myInfoAcknowledge = new MyInfoAcknowledge;
+                    myInfoAcknowledge -> set_userid(userId);
+
+                    ClientMessage clientMessage;
+                    clientMessage.set_option (6);
+                    clientMessage.set_allocated_acknowledge (myInfoAcknowledge);
+
+                    string msgToServer;
+                    clientMessage.SerializeToString (&msgToServer);
+                    sendBySocket (msgToServer);
+
+                    cout << BOLDGREEN << "Conectado :) \n" << RESET << endl;
+
+                    hasConnected = true;
+                    break;
+                }
+                case 5: {
+                    cout << BOLDBLUE << "Los usuarios conectados son: " << RESET << endl;
+                    for (int i = 0; i < serverMessage.connecteduserresponse().connectedusers_size(); i++) {
+                        ConnectedUser tmpUser = serverMessage.connecteduserresponse().connectedusers(i);
+                        cout << BOLDBLUE << "----------------------------------" << RESET << endl;
+                        cout << BOLDBLUE << "\tUSERNAME: " << tmpUser.username() << RESET << endl;
+                        cout << BOLDBLUE << "\tSTATUS: " << tmpUser.status() << RESET << endl;
+                        cout << BOLDBLUE << "\tUSER ID: " << tmpUser.userid() << RESET << endl;
+                        cout << BOLDBLUE << "\tIP: " << tmpUser.ip() << RESET << endl;
+                        cout << BOLDBLUE << "----------------------------------" << RESET << endl;
+                    }
+                    break;
+                }
+                case 6: {
+                    int id = serverMessage.changestatusresponse().userid();
+                    string status = serverMessage.changestatusresponse().status();
+
+                    if (status == "ACTIVO") {
+                        seg = 0;
+                        askChangeStatus = false;
+                    }
+
+                    cout << BOLDYELLOW << "Estado nuevo: " << status << RESET << endl;
+                    estadoActual = status;            
+                    break;
+                }
+                case 7: {
+                    string messageStatus = serverMessage.broadcastresponse().messagestatus();
+
+                    cout << BOLDYELLOW << "Broadcast message: " << messageStatus << RESET << endl;
+                    askChangeStatus = false;
+                    break;
+                }
+                case 8: {
+                    string messageStatus = serverMessage.directmessageresponse().messagestatus();
+
+                    cout << BOLDYELLOW << "Direct message: " << messageStatus << RESET << endl;
+                    break;
+                }
+                default:
+                    break;
+                }
+            } else {
+                cout << BOLDRED << "\nEl servidor murio :(" << endl;
+                exit();
             }
-            default:
-                break;
-            }
+            
         }
     }
 
@@ -153,19 +163,16 @@ void *listen (void *args) {
 }
 
 void *user (void *args) {
-    cout << "Si desea terminar el chat, escribe: 'salir'" << endl;
-    cout << "Para obtener mas informacion sobre el uso del chat, escribe: 'info'" << endl;
+    cout << BOLDMAGENTA << "\nSi desea terminar el chat, escribe: 'salir'" << RESET << endl;
+    cout << BOLDMAGENTA << "Para obtener mas informacion sobre el uso del chat, escribe: 'info'\n" << RESET << endl;
 
     while (isAlive) {
         getline (cin, input);
         seg = 0;
 
         string word = getFirstWord (input);
-        cout << "Accion: " << word << endl;
-
 
         string message = getMessageFromPhrase (input, word);
-        cout << "Mensaje: " << message << endl;
 
         if (word == "info")
             showInfo ();
@@ -191,17 +198,17 @@ void *user (void *args) {
 
 void *checkState(void *args) {
     while (isAlive) {
-        // if (hasConnected) {
-        //     if (seg < inactivoT) {
-        //         sleep (1);
-        //         seg++;
-        //     } else {
-        //         if ((estadoActual != "INACTIVO") && (!askChangeStatus)) {
-        //             cambiarEstado("INACTIVO");
-        //             askChangeStatus = true;
-        //         }
-        //     }
-        // }
+        if (hasConnected) {
+            if (seg < inactivoT) {
+                sleep (1);
+                seg++;
+            } else {
+                if ((estadoActual != "INACTIVO") && (!askChangeStatus)) {
+                    cambiarEstado("INACTIVO");
+                    askChangeStatus = true;
+                }
+            }
+        }
     }
 }
 
@@ -210,15 +217,15 @@ void *sendBySocket (string msg) {
     strcpy(buffer, msg.c_str());
 
     int bytesSen = send (sock, buffer, msg.size() + 1, 0);
-    cout << bytesSen << ":" << msg.size() << ":" << (sizeof(buffer)/sizeof(*buffer)) << "\n";
 }
 
 int connectToServer (string nombre, string username, string ip, string puerto) {
+    cout << BOLDCYAN << "Intentando conectarme..." << RESET << endl;
     struct sockaddr_in serv_addr;
 
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) 
     { 
-        printf("\n Socket creation error \n"); 
+        cout << BOLDRED << "\n Socket creation error \n" << RESET << endl;
         return -1; 
     } 
    
@@ -247,7 +254,7 @@ int connectToServer (string nombre, string username, string ip, string puerto) {
 // 0: Error. Ya existe el usuario u otro error.
 int sendInfoToServer(string nombre, string username, string ip, string puerto) {
     connectToServer (nombre, username, ip, puerto);
-
+    
     // Aqui se pone el codigo para enviar al server.
     // ConnectedUser miUsuario;
     // miUsuario.set_username (username);
@@ -298,7 +305,6 @@ void *cambiarEstado (string nuevoEstado) {
     clientMessage.SerializeToString (&msgToServer);
 
     sendBySocket (msgToServer);
-    cout << "Cambiando de estado..." << endl;
 }
 
 bool ifUsername (string word) {
@@ -335,7 +341,6 @@ void *sendMessageToUser (string username, string message) {
 
     string msgToServer;
     clientMessage.SerializeToString (&msgToServer);
-    cout << "Mande largo: " << msgToServer.size();
     sendBySocket (msgToServer);
 }
 
@@ -355,7 +360,7 @@ void *getAllUsers () {
 
 void *exit() {
     // Si se hace alguna accion para salir.
-    cout << "Saliendo..." << endl;
+    cout << BOLDCYAN << "Desconectandome..." << RESET << endl;
     isAlive = false;
     exit(0);
 }
@@ -396,8 +401,6 @@ void *showInfo () {
 }
 
 int main (int argc, char **argv) {
-        ;
-
     if (argc > 4) {
 
         string nombre = argv[1];
@@ -424,7 +427,7 @@ int main (int argc, char **argv) {
             if (pthread_create(&threadListen, NULL, listen, NULL) 
             || pthread_create(&threadUser, NULL, user, NULL) 
             || pthread_create(&threadState, NULL, checkState, NULL)) {
-                cout << "Error: unable to create threads." << endl;
+                cout << BOLDRED << "Error: unable to create threads." << RESET << endl;
                 exit(-1);
             }
 
