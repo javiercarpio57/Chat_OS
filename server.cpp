@@ -88,18 +88,8 @@ void sendBySocket (string msg, int sock) {
     char buffer[msg.size() + 1] = {0};  
     strcpy(buffer, msg.c_str());
     int bytesSen = send (sock, buffer, msg.size() + 1, 0);
+    cout << bytesSen << " bytes were send \n";
 }
-
-/*
-user getUser(int id){
-    user tempUser = userList[0];
-    int cont = 0;
-    while (tempUser.userId != id) {
-        cont ++;
-        tempUser = userList[cont];
-    }
-    return tempUser;
-}*/
 
 user getUser(int id){
     user tempUser = userList[0];
@@ -252,6 +242,7 @@ void sendBroadcast(int id, string message, int socket){ ///FIx broadcast
     binary;
     gM->SerializeToString(&binary);
     for (int i = 0; i < userList.size(); i++){
+        cout <<" Broadcast vuelta no. "<< i;
         user temporalUser = userList[i];
         sendBySocket(binary, temporalUser.socket);
     }
@@ -293,6 +284,7 @@ void sendMessage(string username, int myid , string message, int socket){
         pm->SerializeToString(&binary);
         user temporalUser = getIdUsername(username);
         sendBySocket(binary, temporalUser.socket);
+        printf("Dm was send to %d \n", temporalUser.userId);
     }
 }
 
