@@ -360,7 +360,8 @@ void foo(user user, int id )
                 cout << "Se desconecto: " << user.username << endl;
                 int pos = getPositionOfUser (user);
 
-                userIdList.erase (userIdList.begin() + pos); //Elima el id de la lista
+                userIdList[pos] = userIdList.back();
+                userIdList.pop_back();
 
                 userList[pos] = userList.back();
                 userList.pop_back();
