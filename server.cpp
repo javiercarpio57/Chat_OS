@@ -352,6 +352,7 @@ void foo(user user, int id )
                 }
             } else {
                 close (mySock);
+                cout << "Se desconecto: " << user.username << endl;
 
                 break;
             }
