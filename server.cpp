@@ -87,9 +87,7 @@ int createSocket () {
 void sendBySocket (string msg, int sock) {
     char buffer[msg.size() + 1] = {0};  
     strcpy(buffer, msg.c_str());
-    //Prueba
     int bytesSen = send (sock, buffer, msg.size() + 1, 0);
-    //cout << bytesSen << ":" << msg.size() << ":" << (sizeof(buffer)/sizeof(*buffer)) << "\n";
 }
 
 
@@ -155,7 +153,6 @@ void changeStatusInList(int id, string status){
     user tempUser = userList[0];
      for (int i = 0; i < userIdList.size(); i++){
         if (userIdList[i] == id) {
-            cout << "Cambio " << id << "\n";
             tempUser = userList[i];
             tempUser.status = status;
             userList[i] = tempUser;
@@ -183,7 +180,6 @@ void getConnectedUsers(connectedUserRequest cur, int socket){
         
         if (checkUserName(cur.username()) == -1){
             seguir = -1;
-            printf("Falle\n");
         }
         //Single user
         ConnectedUser * tempConectedUser;
@@ -208,7 +204,7 @@ void getConnectedUsers(connectedUserRequest cur, int socket){
         ServerMessage temp;
         temp.ParseFromString(binary);
 
-        cout << "Se mandaron : "<<temp.connecteduserresponse().connectedusers_size() << "usuarios" << "\n";
+        cout << "Sending : "<<temp.connecteduserresponse().connectedusers_size() << " users " << "\n";
         for (int i = 0; i < temp.connecteduserresponse().connectedusers_size(); i++) {
             ConnectedUser tmpUser = temp.connecteduserresponse().connectedusers(i);
             cout << "USERNAME: " << tmpUser.username() << endl;
@@ -254,9 +250,9 @@ void sendBroadcast(int id, string message, int socket){ ///FIx broadcast
     gM->SerializeToString(&binary);
     for (int i = 0; i < userList.size(); i++){
         user temporalUser = userList[i];
-        printf("%d\n", temporalUser.userId);
         sendBySocket(binary, temporalUser.socket);
     }
+    printf("Broadcast was send\n");
 }//Add , send to everybody
 
 void sendMessage(string username, int myid , string message, int socket){ 
@@ -293,7 +289,6 @@ void sendMessage(string username, int myid , string message, int socket){
         binary = "";
         pm->SerializeToString(&binary);
         user temporalUser = getIdUsername(username);
-        printf("%d\n", temporalUser.userId);
         sendBySocket(binary, temporalUser.socket);
     }
 }
@@ -312,6 +307,7 @@ void changeStatus(int id, string status, int socket){
     string binary;
     pm->SerializeToString(&binary);
     sendBySocket(binary, socket);
+    printf("User status was changed \n");
 }
 
 int getPositionOfUser (user usuario) {
@@ -345,7 +341,7 @@ void foo(user user, int id )
     m->SerializeToString(&binary);
     sendBySocket(binary, mySock);
     
-    printf("%d :Response from server to client\n", id);
+    printf("%d :Response from server to client send\n", id);
     //printf("Prueba %d", getIdUsername(user.username).userId);
     ClientMessage mr;
     //waiting for acknowledgement
@@ -371,11 +367,12 @@ void foo(user user, int id )
         errorFlag = 2;
     }
     //Verificar si hay 2 con el mismo nombre
-    printf("Acknowledgement was recive\n");
+    
     int working = 0;
     //waiting for request from user
     
     if (errorFlag == 0){
+        printf("Acknowledgement was recive\n");
         while(working == 0){
             ClientMessage temp;
             valread = read(mySock, buffer, 8096);
@@ -392,35 +389,25 @@ void foo(user user, int id )
                             cout << temp.connectedusers().userid() << "\n"; 
                             cout << temp.connectedusers().username() << "\n";
                             getConnectedUsers(temp.connectedusers(), mySock);
-                            printf("devolver usuarios \n");
                         break;
 
                         case 3: 
                             changeStatus(user.userId, temp.changestatus().status(), mySock);
-                            printf("cambiar estado \n" );
                         break;
                         
                         case 4: 
-                            cout << "Recibi largo: " << prueba.size() << "\n";
-                            cout << temp.broadcast().message() << "," << temp.directmessage().message().length() << "\n"; 
                             sendBroadcast(user.userId, temp.broadcast().message(), mySock);
-                            printf("broadcast \n");
                         break;
                         
                         case 5:
-                            cout << "Recibi largo: " << prueba.size() << "\n";
-                            cout << temp.directmessage().message() << "," << temp.directmessage().message().length() << "\n"; 
-                            cout << temp.directmessage().username()  << "," << temp.directmessage().username().length()  << "\n";
-                            cout << temp.directmessage().userid() << "\n";
                             sendMessage(temp.directmessage().username(), id,temp.directmessage().message(), mySock);
-                            printf("mandar privado \n");
-                        break;
+                        break;                            printf("mandar privado \n");
                         default:
                         ;
                     }
                 } else {
                     close (mySock);
-                    cout << "Se desconecto: " << user.username << endl;
+                    cout << "User disconnected: " << user.username << endl;
 
                     userIdList[mypos] = userIdList.back();
                     userIdList.pop_back();
@@ -456,7 +443,7 @@ void foo(user user, int id )
 
         close (mySock);
 
-        cout << "Se desconecto: " << user.username << endl;
+        cout << "User disconnected: " << user.username << endl;
         userIdList[mypos] = userIdList.back();
         userIdList.pop_back();
         userList[mypos] = userList.back();
@@ -472,9 +459,8 @@ int main (int argc, char **argv) {
     //thread t2 (thread2);
 
     PORT = stoi(argv[1]);
-    cout << "Corriendo en puerto: " << PORT << endl;
+    cout << "Running on port: " << PORT << endl;
 
-    printf("Ya se creo la thread\n") ;
     while(true){
         //Establish socket 
         int socket = createSocket();
