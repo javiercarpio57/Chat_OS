@@ -254,6 +254,7 @@ void sendBroadcast(int id, string message, int socket){ ///FIx broadcast
     gM->SerializeToString(&binary);
     for (int i = 0; i < userList.size(); i++){
         user temporalUser = userList[i];
+        cout << "Enviando broadcast a: " << temporalUser.username << endl;
         sendBySocket(binary, temporalUser.socket);
     }
     printf("Broadcast was send\n");

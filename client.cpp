@@ -406,6 +406,23 @@ int main (int argc, char **argv) {
         string ip = argv[3];
         string puerto = argv[4];
 
+        if (username == "broadcast") {
+            cout << BOLDRED << "Tu username no puede ser 'broadcast'." << RESET << endl;
+            exit(0);
+        } else if (username == "info") {
+            cout << BOLDRED << "Tu username no puede ser 'info'." << RESET << endl;
+            exit(0);
+        } else if (username == "usuarios") {
+            cout << BOLDRED << "Tu username no puede ser 'usuarios'." << RESET << endl;
+            exit(0);
+        } else if (username == "estado") {
+            cout << BOLDRED << "Tu username no puede ser 'estado'." << RESET << endl;
+            exit(0);
+        } else if (username == "salir") {
+            cout << BOLDRED << "Tu username no puede ser 'salir'" << RESET << endl;
+            exit(0);
+        } 
+
         cout << "Nombre: " << nombre << endl;
         cout << "Username: " << username << endl;
         cout << "IP: " << ip << endl;
@@ -433,6 +450,8 @@ int main (int argc, char **argv) {
             pthread_join (threadUser, NULL);
             pthread_join (threadState, NULL);
         }
+    } else {
+        cout << BOLDRED << "Faltan parametros para ejecutar el programa." << RESET << endl;
     }
 
     google::protobuf::ShutdownProtobufLibrary();
