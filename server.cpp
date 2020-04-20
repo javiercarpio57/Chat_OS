@@ -18,7 +18,7 @@
 using namespace std;
 using namespace chat;
 
-#define PORT 8080 
+// #define PORT 8080 
 
 struct user {
    string username ;
@@ -35,6 +35,7 @@ vector <int> userIdList;
 vector <user> userList;
 
 int threadCount = 0;
+int PORT;
 
 int createSocket () {
     int server_fd, new_socket, valread; 
@@ -469,6 +470,10 @@ int main (int argc, char **argv) {
     GOOGLE_PROTOBUF_VERIFY_VERSION;
     //start thread 2
     //thread t2 (thread2);
+
+    PORT = stoi(argv[1]);
+    cout << "Corriendo en puerto: " << PORT << endl;
+
     printf("Ya se creo la thread\n") ;
     while(true){
         //Establish socket 

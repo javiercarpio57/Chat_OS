@@ -55,6 +55,7 @@ bool askChangeStatus = false;
 bool hasConnected = false;
 
 int userId;
+string myUsername;
 
 void *listen (void *args) {
     int valread;
@@ -73,6 +74,7 @@ void *listen (void *args) {
                     string u = serverMessage.broadcast().username();
                     int id = serverMessage.broadcast().userid();
 
+                    if (u == myUsername) u = "yo";
                     cout << BOLDCYAN << "([" << id << "]) " << u << ": " << RESET << BOLDGREEN << message << RESET << endl;
                     break;
                 }
@@ -153,6 +155,7 @@ void *listen (void *args) {
                 }
             } else {
                 cout << BOLDRED << "\nDesconexion con el server :(" << endl;
+
                 exit();
             }
             
@@ -399,6 +402,7 @@ int main (int argc, char **argv) {
 
         string nombre = argv[1];
         string username = argv[2];
+        myUsername = username;
         string ip = argv[3];
         string puerto = argv[4];
 
