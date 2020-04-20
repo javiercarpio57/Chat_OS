@@ -33,7 +33,7 @@ struct user {
 list <thread> threadList;
 vector <int> userIdList;
 vector <user> userList;
-vector <queue<ClientMessage>> requestList;
+
 
 int threadCount = 0;
 
@@ -266,7 +266,6 @@ void foo(user user, int id )
     int mySock = user.socket;
     //Get request list 
     int mypos = getUserPos(id);
-    queue<ClientMessage> request = requestList[mypos];
     
     int acknowledgement = 0;
 
@@ -353,7 +352,10 @@ void foo(user user, int id )
             } else {
                 close (mySock);
                 cout << "Se desconecto: " << user.username << endl;
-
+                userIdList.erase (userIdList.begin()+mypos); //Elima el id de la lista
+                userList.erase (userIdList.begin()+mypos);//Elimina el usuario
+                threadList.erase (userIdList.begin()+mypos); //Elimina la thread
+                working = 1; //Sali del while
                 break;
             }
         buffer[8192] = {0}; 
@@ -398,11 +400,9 @@ int main (int argc, char **argv) {
         //threadIdList.push_back(tempUser.userId);
         userIdList.push_back(tempUser.userId);
         userList.push_back(tempUser);
+
         printf("User created\n");
 
-        queue<ClientMessage> tempQueue;
-        requestList.push_back(tempQueue);
-                
         threadList.push_back(thread(foo, tempUser, threadCount));
         
         printf("Thread added\n");
