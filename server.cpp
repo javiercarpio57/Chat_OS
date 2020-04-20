@@ -33,6 +33,7 @@ struct user {
 list <thread> threadList;
 vector <int> userIdList;
 vector <user> userList;
+vector <string> names;
 
 int threadCount = 0;
 
@@ -418,8 +419,12 @@ void foo(user user, int id )
                         ;
                     }
                 } else {
+                                        
                     close (mySock);
-                    cout << "Se desconecto: " << user.username << endl;
+                    cout << "Se desconecto: " << names[mypos] << endl;
+
+                    names[mypos] = names.back();
+                    names.pop_back();
 
                     userIdList[mypos] = userIdList.back();
                     userIdList.pop_back();
@@ -502,6 +507,7 @@ int main (int argc, char **argv) {
         //threadIdList.push_back(tempUser.userId);
         userIdList.push_back(tempUser.userId);
         userList.push_back(tempUser);
+        names.push_back(tempUser.username);
 
         printf("User created\n");
 
