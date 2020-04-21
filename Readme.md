@@ -30,13 +30,13 @@ To compile the client file:
 g++ client.cpp mensaje.pb.cc -lprotobuf -lpthread -o client
 ```
 
-To run server file, where <PORT> is the port where you want your clients to connect:
+To run server file, where PORT is the port where you want your clients to connect:
 
 ```
 ./server <PORT>
 ```
 
-To run client file, where <username> is any username you want, <IP> is de ip of your server <PORT> is the port where your server is running:
+To run client file, where username is any username you want, IP is de ip of your server and PORT is the port where your server is running:
 
 ```
 ./client <username> <IP> <PORT>
