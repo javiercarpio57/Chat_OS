@@ -398,7 +398,7 @@ void foo(user user, int id )
                         ;
                     }
                 } else {
-                                        
+                    int mypos = getUserPos(id);              
                     close (mySock);
                     cout << "Se desconecto: " << names[mypos] << endl;
 
@@ -429,7 +429,7 @@ void foo(user user, int id )
 
             response->set_errormessage("Repeated user");            
         }
-
+        int mypos = getUserPos(id);
         ServerMessage * m(new ServerMessage);
         m->set_option(3); 
         m->set_allocated_error(response);
