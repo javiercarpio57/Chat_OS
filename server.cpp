@@ -37,7 +37,7 @@ vector <string> names;
 
 int threadCount = 0;
 int PORT;
-
+//Creates socket
 int createSocket () {
     int server_fd, new_socket, valread; 
     struct sockaddr_in address; 
@@ -84,24 +84,14 @@ int createSocket () {
 
     return new_socket;
 }
-
+//Function to send message
 void sendBySocket (string msg, int sock) {
     char buffer[msg.size() + 1] = {0};  
     strcpy(buffer, msg.c_str());
     int bytesSen = send (sock, buffer, msg.size() + 1, 0);
+    cout << bytesSen << " bytes were send \n";
 }
-
-/*
-user getUser(int id){
-    user tempUser = userList[0];
-    int cont = 0;
-    while (tempUser.userId != id) {
-        cont ++;
-        tempUser = userList[cont];
-    }
-    return tempUser;
-}*/
-
+//Optain user by id
 user getUser(int id){
     user tempUser = userList[0];
     for (int i = 0; i < userIdList.size(); i++){
@@ -111,7 +101,7 @@ user getUser(int id){
     }
     return tempUser;
 }
-
+//Get user by username
 user getIdUsername(string username){
     user tempUser = userList[0];
     int cont = 0;
@@ -123,7 +113,7 @@ user getIdUsername(string username){
     }
     return tempUser;
 }
-
+//Get position by ud
 int getUserPos(int id){
     int cont = 0;
     for (int i = 0; i < userIdList.size(); i++){
@@ -133,7 +123,7 @@ int getUserPos(int id){
     }
     return cont;
 }
-
+//Check if user name exist 
 int checkUserName(string username){
     int cont = -1;
     for (int i = 0; i < userList.size(); i++){
@@ -144,7 +134,7 @@ int checkUserName(string username){
     }
     return cont;
 }
-
+//Check id username is repeated
 int checkUserRepeated(string username){
     int cont = -1;
     for (int i = 0; i < userList.size(); i++){
@@ -155,7 +145,7 @@ int checkUserRepeated(string username){
     }
     return cont;
 }
-
+//Change status in list
 void changeStatusInList(int id, string status){
     user tempUser = userList[0];
      for (int i = 0; i < userIdList.size(); i++){
@@ -166,7 +156,7 @@ void changeStatusInList(int id, string status){
         }
     }
 }
-
+//Optain conected users
 void getConnectedUsers(connectedUserRequest cur, int socket){
     ConnectedUserResponse * response(new ConnectedUserResponse);
     int seguir = 1;
@@ -231,7 +221,7 @@ void getConnectedUsers(connectedUserRequest cur, int socket){
         sendBySocket(binary, socket);
     }
 }
-
+//Send broadcast to all users
 void sendBroadcast(int id, string message, int socket){ ///FIx broadcast
     //Server response to sender 
     BroadcastResponse * response(new BroadcastResponse);
@@ -253,13 +243,14 @@ void sendBroadcast(int id, string message, int socket){ ///FIx broadcast
     binary;
     gM->SerializeToString(&binary);
     for (int i = 0; i < userList.size(); i++){
+        cout <<" Broadcast vuelta no. "<< i;
         user temporalUser = userList[i];
         cout << "Enviando broadcast a: " << temporalUser.username << endl;
         sendBySocket(binary, temporalUser.socket);
     }
     printf("Broadcast was send\n");
 }
-
+//Send private message
 void sendMessage(string username, int myid , string message, int socket){ 
     //Server response to sender
     if (checkUserName(username) == -1){
@@ -295,9 +286,10 @@ void sendMessage(string username, int myid , string message, int socket){
         pm->SerializeToString(&binary);
         user temporalUser = getIdUsername(username);
         sendBySocket(binary, temporalUser.socket);
+        printf("Dm was send to %d \n", temporalUser.userId);
     }
 }
-
+//Change status of a user
 void changeStatus(int id, string status, int socket){ 
     //Server response to sender 
     changeStatusInList(id, status);
@@ -314,7 +306,7 @@ void changeStatus(int id, string status, int socket){
     sendBySocket(binary, socket);
     printf("User status was changed \n");
 }
-
+//OPtain postition of user
 int getPositionOfUser (user usuario) {
     for (int i = 0; i < userList.size(); i++)
     {
