@@ -377,10 +377,17 @@ void foo(user user, int id )
                     temp.ParseFromString(buffer);
                     string prueba = buffer;
                     buffer[8096] = {0}; 
+                    string tempString;
+                    connectedUserRequest tempCUR;
                     switch (temp.option()) {
                         
                         case 2: 
-                            getConnectedUsers(temp.connectedusers(), mySock);
+                            tempCUR = temp.connectedusers();
+                            if ( (temp.connectedusers().username().size() == 0 ) && (temp.connectedusers().userid() != 0 ) ){
+                                tempCUR.set_username( getUser(temp.directmessage().userid()).username );
+                            } 
+
+                            getConnectedUsers(tempCUR, mySock);
                         break;
 
                         case 3: 
@@ -392,7 +399,14 @@ void foo(user user, int id )
                         break;
                         
                         case 5:
-                            sendMessage(temp.directmessage().username(), id,temp.directmessage().message(), mySock);
+                            
+                            if (temp.directmessage().username().size() == 0){
+                                tempString = getUser(temp.directmessage().userid()).username;
+                            } else {
+                                tempString = temp.directmessage().username();
+                            }
+                            
+                            sendMessage(tempString, id,temp.directmessage().message(), mySock);
                         break;                            
                         default:
                         ;
