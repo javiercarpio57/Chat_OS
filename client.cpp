@@ -30,10 +30,12 @@
 
 #define inactivoT 20
 
+// Declaracion de namespace.
 using namespace chat;
 using namespace std;
 using namespace chrono;
 
+// Definicion de funciones para su uso.
 string getFirstWord (string phrase);
 string getMessageFromPhrase (string phrase, string toErase);
 void *showInfo ();
@@ -46,6 +48,7 @@ void *exit();
 void *sendBySocket(string msgToServer);
 void *getAllUsers();
 
+// Declaracion de variables globales.
 string input;
 int seg;
 string estadoActual;
@@ -53,10 +56,11 @@ int sock = 0;
 bool isAlive = true;
 bool askChangeStatus = false;
 bool hasConnected = false;
-
 int userId;
 string myUsername;
 
+// Funcion que ejecuta un thread para escuchar todo aquello
+// que el server mande al usuario.
 void *listen (void *args) {
     int valread;
 
@@ -163,6 +167,8 @@ void *listen (void *args) {
     cout << "\nTermine de escuchar.\n" << endl;
 }
 
+// Funcion que ejecuta thread para interactuar con el usuario
+// y mandar al server las operaciones que desee el usuario.
 void *user (void *args) {
     cout << BOLDMAGENTA << "\nSi desea terminar el chat, escribe: 'salir'" << RESET << endl;
     cout << BOLDMAGENTA << "Para obtener mas informacion sobre el uso del chat, escribe: 'info'\n" << RESET << endl;
@@ -197,6 +203,8 @@ void *user (void *args) {
     }
 }
 
+// Funcion que ejecuta thread para verificar el tiempo de inactividad
+// de un usuario y cambiarlo automaticamente.
 void *checkState(void *args) {
     while (isAlive) {
         if (hasConnected) {
@@ -213,6 +221,7 @@ void *checkState(void *args) {
     }
 }
 
+// Funcion que manda informacion al server mediante un socket.
 void *sendBySocket (string msg) {
     char buffer[msg.size() + 1] = {0};
     strcpy(buffer, msg.c_str());
@@ -220,6 +229,7 @@ void *sendBySocket (string msg) {
     int bytesSen = send (sock, buffer, msg.size() + 1, 0);
 }
 
+// Funcion que sirve para conectar mediate sockets con el server.
 int connectToServer (string nombre, string username, string ip, string puerto) {
     cout << BOLDCYAN << "Intentando conectarme..." << RESET << endl;
     struct sockaddr_in serv_addr;
@@ -250,9 +260,7 @@ int connectToServer (string nombre, string username, string ip, string puerto) {
     }
 }
 
-// Si el usuario se puede inscribir al server...
-// 1: Success
-// 0: Error. Ya existe el usuario u otro error.
+// Funcion para sincronizarse con el servidor y empezar el proceso de acknowledge.
 int sendInfoToServer(string nombre, string username, string ip, string puerto) {
     connectToServer (nombre, username, ip, puerto);
 
@@ -272,6 +280,7 @@ int sendInfoToServer(string nombre, string username, string ip, string puerto) {
     return 1;
 }
 
+// Funcion que envia al server un mensaje broadcast.
 void *broadcastMessage (string message) {
     // Aqui se envia un mensaje a todos los usuarios
     BroadcastRequest *broadcastMessage = new BroadcastRequest();
@@ -287,6 +296,7 @@ void *broadcastMessage (string message) {
     sendBySocket (msgToServer);
 }
 
+// Funcion que cambia el estado del usuario en el server.
 void *cambiarEstado (string nuevoEstado) {
     // Aqui se cambia a otro estado
     ChangeStatusRequest *changeStatus = new ChangeStatusRequest();
@@ -302,12 +312,12 @@ void *cambiarEstado (string nuevoEstado) {
     sendBySocket (msgToServer);
 }
 
+// Funcion que verifica si es un usuario.
 bool ifUsername (string word) {
-    // si es usuario: true
-    // si no es usuario: false
     return true;
 }
 
+// Funcion que solicita al server la informacion de un usuario especifico.
 void *getUserInfo (string username) {
     cout << BOLDBLUE << "Obteniendo info de " << username << "..." << RESET << endl;
     connectedUserRequest *userRequest = new connectedUserRequest();
@@ -324,6 +334,7 @@ void *getUserInfo (string username) {
     sendBySocket (msgToServer);
 }
 
+// Funcion que manda un mensaje directo a un usuario especifico.
 void *sendMessageToUser (string username, string message) {
     DirectMessageRequest *directMessage = new DirectMessageRequest();
     directMessage -> set_message (message);
@@ -339,6 +350,7 @@ void *sendMessageToUser (string username, string message) {
     sendBySocket (msgToServer);
 }
 
+// FUncion que solicita al server todos los usuarios conectados al server.
 void *getAllUsers () {
     connectedUserRequest *userRequest = new connectedUserRequest();
     userRequest -> set_userid(0);
@@ -353,6 +365,7 @@ void *getAllUsers () {
     sendBySocket (msgToServer);
 }
 
+// Funcion que cierra el programa.
 void *exit() {
     // Si se hace alguna accion para salir.
     cout << BOLDCYAN << "Desconectandome..." << RESET << endl;
@@ -379,6 +392,7 @@ string getMessageFromPhrase (string phrase, string toErase) {
     return phrase;
 }
 
+// Funcion que muestra un mensaje de ayuda.
 void *showInfo () {
     cout << BOLDYELLOW << "---------------------------------- INFO ----------------------------------" << RESET << endl;
     cout << BOLDGREEN << "Este es un chat creado para el curso de sistemas operativos." << RESET << endl;
@@ -396,13 +410,12 @@ void *showInfo () {
 }
 
 int main (int argc, char **argv) {
-    if (argc > 4) {
+    if (argc > 3) {
 
-        string nombre = argv[1];
-        string username = argv[2];
+        string username = argv[1];
         myUsername = username;
-        string ip = argv[3];
-        string puerto = argv[4];
+        string ip = argv[2];
+        string puerto = argv[3];
 
         if (username == "broadcast") {
             cout << BOLDRED << "Tu username no puede ser 'broadcast'." << RESET << endl;
