@@ -115,7 +115,7 @@ void *listen (void *args) {
                     break;
                 }
                 case 5: {
-                    cout << BOLDBLUE << "Los usuarios conectados son: " << RESET << endl;
+                    if (serverMessage.connecteduserresponse().connectedusers_size() > 1) cout << BOLDBLUE << "Los usuarios conectados son: " << RESET << endl;
                     for (int i = 0; i < serverMessage.connecteduserresponse().connectedusers_size(); i++) {
                         ConnectedUser tmpUser = serverMessage.connecteduserresponse().connectedusers(i);
                         cout << BOLDBLUE << "----------------------------------" << RESET << endl;
