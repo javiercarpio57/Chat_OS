@@ -320,8 +320,8 @@ bool ifUsername (string word) {
 void *getUserInfo (string username) {
     cout << BOLDBLUE << "Obteniendo info de " << username << "..." << RESET << endl;
     connectedUserRequest *userRequest = new connectedUserRequest();
-    userRequest -> set_userid(userId); // Hay que asignarle un valor para el usuario.
-    userRequest -> set_username (username);
+    userRequest -> set_userid(1); // Hay que asignarle un valor para el usuario.
+    // userRequest -> set_username (username);
 
     ClientMessage clientMessage;
     clientMessage.set_option (2);
