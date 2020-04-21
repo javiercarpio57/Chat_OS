@@ -413,6 +413,7 @@ int main (int argc, char **argv) {
     if (argc > 3) {
 
         string username = argv[1];
+        string nombre = "";
         myUsername = username;
         string ip = argv[2];
         string puerto = argv[3];
@@ -434,7 +435,6 @@ int main (int argc, char **argv) {
             exit(0);
         } 
 
-        cout << "Nombre: " << nombre << endl;
         cout << "Username: " << username << endl;
         cout << "IP: " << ip << endl;
         cout << "puerto: " << puerto << endl;
