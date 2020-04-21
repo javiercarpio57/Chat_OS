@@ -337,7 +337,7 @@ void *getUserInfo (string username) {
 void *sendMessageToUser (string username, string message) {
     DirectMessageRequest *directMessage = new DirectMessageRequest();
     directMessage -> set_message (message);
-    directMessage -> set_userid (userId);
+    directMessage -> set_userid (1);
     // directMessage -> set_username (username);
 
     ClientMessage clientMessage;
