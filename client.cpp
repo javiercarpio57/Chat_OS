@@ -122,7 +122,6 @@ void *listen (void *args) {
                         cout << BOLDBLUE << "\tUSERNAME: " << tmpUser.username() << RESET << endl;
                         cout << BOLDBLUE << "\tSTATUS: " << tmpUser.status() << RESET << endl;
                         cout << BOLDBLUE << "\tUSER ID: " << tmpUser.userid() << RESET << endl;
-                        cout << BOLDBLUE << "\tIP: " << tmpUser.ip() << RESET << endl;
                         cout << BOLDBLUE << "----------------------------------" << RESET << endl;
                     }
                     break;
@@ -339,7 +338,7 @@ void *sendMessageToUser (string username, string message) {
     DirectMessageRequest *directMessage = new DirectMessageRequest();
     directMessage -> set_message (message);
     directMessage -> set_userid (userId);
-    directMessage -> set_username (username);
+    // directMessage -> set_username (username);
 
     ClientMessage clientMessage;
     clientMessage.set_option (5);
